@@ -1,0 +1,155 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space);
+}
+
+.stack > * + * {
+  margin-top: 12px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  composes: button;
+  background: transparent;
+  color: var(--primary);
+}
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field label,
+.legend {
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px var(--space);
+  margin: 0;
+}
+
+.choice {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.badgeDanger {
+  composes: badge;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.badgeSuccess {
+  composes: badge;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.badgeInfo {
+  composes: badge;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.error {
+  border-left: 4px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list > li + li {
+  margin-top: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}

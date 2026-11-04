@@ -1,0 +1,28 @@
+.step {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.content {
+  margin-top: var(--space);
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: calc(var(--space) * 1.5);
+}
+
+.nav > :only-child {
+  margin-left: auto;
+}
