@@ -23,8 +23,8 @@ public record Term(String id, String label, LocalDate startDate, LocalDate endDa
                    List<String> missingFields) {
 
     public Term {
-        excludedDates = List.copyOf(excludedDates);
-        readingWeekDates = List.copyOf(readingWeekDates);
-        missingFields = List.copyOf(missingFields);
+        excludedDates = excludedDates == null ? List.of() : List.copyOf(excludedDates);
+        readingWeekDates = readingWeekDates == null ? List.of() : List.copyOf(readingWeekDates);
+        missingFields = missingFields == null ? List.of() : List.copyOf(missingFields);
     }
 }

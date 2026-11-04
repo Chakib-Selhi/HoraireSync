@@ -14,6 +14,6 @@ import java.util.List;
 public record Course(String code, String title, Integer credits, String termId, List<String> offeredTermIds) {
 
     public Course {
-        offeredTermIds = List.copyOf(offeredTermIds);
+        offeredTermIds = offeredTermIds == null ? List.of() : List.copyOf(offeredTermIds);
     }
 }

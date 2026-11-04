@@ -12,6 +12,6 @@ import java.util.List;
 public record CourseSections(Course course, String termId, List<Section> sections) {
 
     public CourseSections {
-        sections = List.copyOf(sections);
+        sections = sections == null ? List.of() : List.copyOf(sections);
     }
 }

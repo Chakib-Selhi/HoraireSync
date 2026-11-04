@@ -23,8 +23,8 @@ public record Section(String courseCode, String sectionNumber, String instructor
                       String sourceUrl) {
 
     public Section {
-        meetings = List.copyOf(meetings);
-        notes = List.copyOf(notes);
-        missingFields = List.copyOf(missingFields);
+        meetings = meetings == null ? List.of() : List.copyOf(meetings);
+        notes = notes == null ? List.of() : List.copyOf(notes);
+        missingFields = missingFields == null ? List.of() : List.copyOf(missingFields);
     }
 }
