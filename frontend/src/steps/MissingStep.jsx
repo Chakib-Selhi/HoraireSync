@@ -4,7 +4,7 @@ import MissingBadge from '../components/MissingBadge.jsx';
 import StepLayout from '../components/StepLayout.jsx';
 import ui from '../components/ui.module.css';
 import { t } from '../i18n/index.js';
-import { dayLabel, formatTime, groupNumber } from '../lib/format.js';
+import { describePath, groupNumber } from '../lib/format.js';
 import { addMeeting, essentialProblems, getField, isEssentialPath, setField } from '../lib/schedule.js';
 import { orderedSelections } from '../state/reducer.js';
 import { useSchedule } from '../state/ScheduleContext.jsx';
@@ -61,7 +61,8 @@ function SectionGaps({ courseTitle, section, term, onChange }) {
   return (
     <section className={`${ui.card} ${ui.stack}`} aria-labelledby={id('title')}>
       <h3 id={id('title')}>
-        {section.courseCode} {courseTitle} · {t('sections.group', { n: groupNumber(section.sectionNumber) })}
+        {section.courseCode} {courseTitle}
+        {section.sectionNumber && ` · ${t('sections.group', { n: groupNumber(section.sectionNumber) })}`}
       </h3>
       {section.meetings.length === 0 && (
         <p>
@@ -79,7 +80,7 @@ function SectionGaps({ courseTitle, section, term, onChange }) {
               <FieldInput
                 id={id(path)}
                 name={fieldName(path)}
-                label={`${t(`fields.${fieldName(path)}`)}${meeting ? ` (${describe(meeting)})` : ''}`}
+                label={describePath(section, path)}
                 value={value}
                 required={essential}
                 onChange={(v) => onChange(setField(section, path, v))}
@@ -97,11 +98,4 @@ function SectionGaps({ courseTitle, section, term, onChange }) {
       </button>
     </section>
   );
-}
-
-function describe(meeting) {
-  const parts = [t(`meetingTypes.${meeting.type ?? 'OTHER'}`)];
-  if (meeting.day) parts.push(dayLabel(meeting.day));
-  if (meeting.start) parts.push(formatTime(meeting.start));
-  return parts.join(', ');
 }

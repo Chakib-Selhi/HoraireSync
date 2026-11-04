@@ -174,7 +174,7 @@ describe('exportPayload', () => {
 describe('helpers', () => {
   it('builds a manual section owned by the user', () => {
     const s = manualSection({ courseCode: ' glo2004 ', sectionNumber: '', instructor: ' ', mode: 'HYBRID', meetings: [emptyMeeting()] });
-    expect(s).toMatchObject({ courseCode: 'GLO2004', sectionNumber: '1', instructor: null, mode: 'HYBRID', missingFields: [] });
+    expect(s).toMatchObject({ courseCode: 'GLO2004', sectionNumber: null, instructor: null, mode: 'HYBRID', missingFields: [] });
   });
 
   it('lists the campuses of the loaded courses', () => {

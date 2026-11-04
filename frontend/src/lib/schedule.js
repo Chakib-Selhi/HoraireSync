@@ -29,7 +29,7 @@ export function emptyMeeting() {
 export function manualSection({ courseCode, sectionNumber, instructor, mode, meetings }) {
   return {
     courseCode: courseCode.trim().toUpperCase(),
-    sectionNumber: isBlank(sectionNumber) ? '1' : sectionNumber.trim(),
+    sectionNumber: isBlank(sectionNumber) ? null : sectionNumber.trim(),
     instructor: isBlank(instructor) ? null : instructor.trim(),
     mode: mode ?? 'UNKNOWN',
     campus: null,

@@ -6,13 +6,13 @@ import StepLayout from '../components/StepLayout.jsx';
 import WeekView from '../components/WeekView.jsx';
 import ui from '../components/ui.module.css';
 import { t } from '../i18n/index.js';
-import { dayLabel, formatDate, formatTime, groupNumber } from '../lib/format.js';
+import { dayLabel, describePath, formatDate, formatTime, groupNumber, sectionLabel } from '../lib/format.js';
 import { essentialProblems, oneOffMeetings, stillMissing, weekLayout } from '../lib/schedule.js';
 import { useAsync } from '../lib/useAsync.js';
 import { orderedSelections } from '../state/reducer.js';
 import { useSchedule } from '../state/ScheduleContext.jsx';
 
-const label = (ref) => `${ref.courseCode} gr. ${groupNumber(ref.sectionNumber)}`;
+const label = (ref) => sectionLabel(ref.courseCode, ref.sectionNumber);
 
 export default function ReviewStep() {
   const { state, dispatch } = useSchedule();
@@ -23,11 +23,13 @@ export default function ReviewStep() {
     [JSON.stringify(selections)],
   );
   const blocking = essentialProblems(selections, state.term);
-  const optionalGaps = selections.flatMap(({ section }) =>
-    stillMissing(section)
-      .filter((path) => !blocking.some((b) => b.courseCode === section.courseCode && b.path === path))
-      .map((path) => ({ section, path })),
-  );
+  // One line per section, listing its optional fields still empty with the meeting they belong to.
+  const optionalGaps = selections
+    .map(({ section }) => ({
+      section,
+      paths: stillMissing(section).filter((path) => !blocking.some((b) => b.courseCode === section.courseCode && b.path === path)),
+    }))
+    .filter((gap) => gap.paths.length > 0);
   const blocks = weekLayout(selections, conflicts.data ?? []);
   const exams = oneOffMeetings(selections);
 
@@ -58,8 +60,7 @@ export default function ReviewStep() {
             <ul>
               {exams.map(({ courseCode, sectionNumber, meeting }, i) => (
                 <li key={i}>
-                  {formatDate(meeting.onlyDate)} · {formatTime(meeting.start)} - {formatTime(meeting.end)} · {courseCode} gr.{' '}
-                  {groupNumber(sectionNumber)}
+                  {formatDate(meeting.onlyDate)} · {formatTime(meeting.start)} - {formatTime(meeting.end)} · {sectionLabel(courseCode, sectionNumber)}
                 </li>
               ))}
             </ul>
@@ -95,7 +96,8 @@ export default function ReviewStep() {
               <ul>
                 {blocking.map((p, i) => (
                   <li key={i}>
-                    {p.courseCode} gr. {groupNumber(p.sectionNumber)} : {t(`fields.${p.path.split('.').pop()}`)}{' '}
+                    {sectionLabel(p.courseCode, p.sectionNumber)} :{' '}
+                    {describePath(selections.find((s) => s.section.courseCode === p.courseCode).section, p.path)}{' '}
                     <button type="button" className={ui.link} onClick={() => dispatch({ type: 'goTo', step: 6 })}>
                       {t('nav.edit')}
                     </button>
@@ -105,14 +107,17 @@ export default function ReviewStep() {
             </>
           )}
           {optionalGaps.length > 0 && (
-            <ul className={ui.hint}>
-              {optionalGaps.map(({ section, path }, i) => (
-                <li key={i}>
-                  {section.courseCode} gr. {groupNumber(section.sectionNumber)} : {t(`fields.${path.split('.').pop()}`)} (
-                  {t('common.optional')})
-                </li>
-              ))}
-            </ul>
+            <details>
+              <summary>{t('review.optionalGaps', { count: optionalGaps.reduce((n, g) => n + g.paths.length, 0) })}</summary>
+              <ul className={ui.hint}>
+                {optionalGaps.map(({ section, paths }) => (
+                  <li key={section.courseCode}>
+                    {sectionLabel(section.courseCode, section.sectionNumber)} :{' '}
+                    {paths.map((path) => describePath(section, path)).join(' ; ')}
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
         </div>
       </div>

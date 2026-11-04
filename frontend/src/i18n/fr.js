@@ -170,6 +170,7 @@ const fr = {
     stillMissing: 'Champs encore vides',
     noneMissing: 'Toutes les informations obligatoires sont présentes.',
     blocking: 'Il manque des informations obligatoires : l’export est bloqué.',
+    optionalGaps: 'Champs facultatifs encore vides ({count}) : ils seront omis du fichier',
     exams: 'Examens et séances ponctuelles',
     confirm: 'Confirmer cet horaire',
   },

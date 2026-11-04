@@ -251,7 +251,8 @@ public class IcsExportService {
                 problems.add("groupe sans sigle de cours");
                 continue;
             }
-            String label = section.courseCode() + " gr. " + section.sectionNumber();
+            String label = section.sectionNumber() == null || section.sectionNumber().isBlank()
+                    ? section.courseCode() : section.courseCode() + " gr. " + section.sectionNumber();
             if (section.meetings().isEmpty()) {
                 problems.add(label + " : aucune séance");
             }
