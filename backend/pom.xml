@@ -20,6 +20,7 @@
     <properties>
         <java.version>21</java.version>
         <jsoup.version>1.21.2</jsoup.version>
+        <ical4j.version>4.1.1</ical4j.version>
         <jacoco.version>0.8.13</jacoco.version>
         <!-- Minimum line coverage enforced on the service and adapter packages -->
         <coverage.minimum>0.70</coverage.minimum>
@@ -46,6 +47,13 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
+        </dependency>
+
+        <dependency>
+            <!-- iCalendar (RFC 5545) model, writer and parser; ships its own time zone data, no network needed -->
+            <groupId>org.mnode.ical4j</groupId>
+            <artifactId>ical4j</artifactId>
+            <version>${ical4j.version}</version>
         </dependency>
 
         <dependency>
