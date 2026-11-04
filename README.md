@@ -6,7 +6,7 @@
 
 HoraireSync transforme une liste de cours universitaires en fichier `.ics` importable dans Apple Calendar, Google Calendar ou Outlook. On choisit son école, sa session et ses cours ; l'application récupère les groupes publiés, les classe selon ses préférences, détecte les conflits et génère l'horaire de la session.
 
-**Démo :** _lien Vercel à venir_ · **API :** _lien Railway à venir_
+**Démo :** [horairesync.vercel.app](https://horairesync.vercel.app) · **API :** [backend-production-68f55.up.railway.app/api/v1/schools](https://backend-production-68f55.up.railway.app/api/v1/schools)
 
 ![Parcours complet : école, session, programme, cours, préférences, groupes, compte rendu et export](docs/images/demo.gif)
 
@@ -102,8 +102,8 @@ Le test d'export relit le fichier généré avec le parseur ical4j : il compte l
 
 | Partie | Hébergeur | Configuration |
 | --- | --- | --- |
-| Backend | Railway (image Docker) | `backend/Dockerfile`, `backend/railway.json`. Variable `CORS_ALLOWED_ORIGINS` = adresse Vercel (motifs acceptés, ex. `https://horairesync-*.vercel.app`). Railway fournit `PORT`. |
-| Frontend | Vercel | `frontend/vercel.json`, dossier racine `frontend`. Variable `VITE_API_URL` = adresse Railway. |
+| Backend | Railway (image Docker) | Service relié au dépôt : dossier racine `/backend`, `Dockerfile`, vérification de santé `/api/v1/schools`, redéploiement à chaque push touchant `backend/`. Variables : `CORS_ALLOWED_ORIGINS` (adresse Vercel, motifs acceptés pour les aperçus) et `PORT=8080`. |
+| Frontend | Vercel | `frontend/vercel.json`, dossier racine `frontend`, redéploiement à chaque push. Variable `VITE_API_URL` = adresse Railway. |
 | CI | GitHub Actions | `.github/workflows/ci.yml` : tests backend et frontend, build de l'image Docker. |
 
 ## Ajouter une école
@@ -142,7 +142,7 @@ Outil non officiel, sans lien avec l'UQAM. Les données viennent des pages publi
 
 HoraireSync turns a list of university courses into an `.ics` file for Apple Calendar, Google Calendar or Outlook. Pick a school, a term and courses; the app reads the published sections, ranks them against your preferences, detects conflicts and generates the term schedule. The interface is in French; texts are centralized for a future English version.
 
-**Demo:** _Vercel link coming soon_ · **API:** _Railway link coming soon_
+**Demo:** [horairesync.vercel.app](https://horairesync.vercel.app) · **API:** [backend-production-68f55.up.railway.app/api/v1/schools](https://backend-production-68f55.up.railway.app/api/v1/schools)
 
 ## Problem
 
@@ -190,7 +190,7 @@ Tests: `./mvnw verify` (backend, JaCoCo coverage gate at 70 % on services and ad
 
 ## Deployment
 
-Backend on Railway from `backend/Dockerfile` (`CORS_ALLOWED_ORIGINS` = Vercel URL, `PORT` provided by Railway). Frontend on Vercel with root directory `frontend` and `VITE_API_URL` = Railway URL. CI on GitHub Actions.
+Backend on Railway from `backend/Dockerfile` (root directory `/backend`, healthcheck `/api/v1/schools`, `CORS_ALLOWED_ORIGINS` = Vercel URL, `PORT=8080`). Frontend on Vercel with root directory `frontend` and `VITE_API_URL` = Railway URL. CI on GitHub Actions.
 
 ## Adding a school
 
