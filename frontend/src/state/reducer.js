@@ -1,15 +1,18 @@
 /**
- * Whole wizard state in one reducer. Screens dispatch actions; network calls stay in the screens.
+ * Whole wizard state in one reducer. Screens dispatch actions; network calls stay outside.
  *
- * courses: [{ code, title, credits, sections, manual }]
- * selections: { [courseCode]: { courseTitle, section } }   the section may be edited by the user
+ * courses: [{ code, title, credits, sections, status, error, manual }]
+ *   status: 'loading' while the sections are fetched, 'ready', or 'error'
+ * selections: { [courseCode]: { courseTitle, section } }
  */
-export const STEPS = ['school', 'term', 'program', 'courses', 'preferences', 'sections', 'missing', 'review', 'export'];
+export const STEPS = ['term', 'program', 'courses', 'preferences', 'sections', 'review', 'export'];
+
+/** Only UQAM is supported: the school is fixed, the backend stays multi-school. */
+export const SCHOOL = { id: 'uqam', name: 'Université du Québec à Montréal (UQAM)', supported: true };
 
 export const initialState = {
   step: 0,
-  school: null,
-  manual: false,
+  school: SCHOOL,
   term: null,
   program: null,
   courses: [],
@@ -18,67 +21,63 @@ export const initialState = {
   excludeReadingWeek: true,
 };
 
-/** Steps skipped in manual mode: no program list, no ranking of published sections. */
-const MANUAL_SKIPS = new Set(['program', 'preferences', 'sections']);
-
-export function isStepAvailable(state, step) {
-  return !(state.manual && MANUAL_SKIPS.has(STEPS[step]));
-}
-
-function move(state, direction) {
-  let step = state.step + direction;
-  while (step > 0 && step < STEPS.length - 1 && !isStepAvailable(state, step)) {
-    step += direction;
-  }
-  return { ...state, step: Math.min(Math.max(step, 0), STEPS.length - 1) };
-}
-
+const clampStep = (step) => Math.min(Math.max(step, 0), STEPS.length - 1);
 const toggle = (list, value) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+const updateCourse = (state, code, changes) => ({
+  ...state,
+  courses: state.courses.map((c) => (c.code === code ? { ...c, ...changes } : c)),
+});
 
 export function reducer(state, action) {
   switch (action.type) {
     case 'next':
-      return move(state, 1);
+      return { ...state, step: clampStep(state.step + 1) };
     case 'back':
-      return move(state, -1);
+      return { ...state, step: clampStep(state.step - 1) };
     case 'goTo':
-      return isStepAvailable(state, action.step) ? { ...state, step: action.step } : state;
+      return { ...state, step: clampStep(action.step) };
 
-    case 'selectSchool': {
-      const sameSchool = state.school?.id === action.school.id;
-      const base = sameSchool ? state : { ...initialState, step: state.step };
-      return { ...base, school: action.school, manual: !action.school.supported };
-    }
     case 'selectTerm':
-      // Another term means other sections: keep the course list, drop loaded sections and choices.
+      // Another term means other sections: keep the course list, reload published sections, drop their choices.
       if (state.term?.id === action.term.id) return { ...state, term: action.term };
       return {
         ...state,
         term: action.term,
-        courses: state.courses.map((c) => (c.manual ? c : { ...c, sections: null })),
-        selections: Object.fromEntries(Object.entries(state.selections).filter(([code]) =>
-          state.courses.find((c) => c.code === code)?.manual)),
+        courses: state.courses.map((c) => (c.manual ? c : { ...c, sections: null, status: 'loading', error: null })),
+        selections: Object.fromEntries(
+          Object.entries(state.selections).filter(([code]) => state.courses.find((c) => c.code === code)?.manual),
+        ),
       };
-    case 'updateTerm':
-      return { ...state, term: { ...state.term, ...action.changes } };
     case 'selectProgram':
       return { ...state, program: action.program };
 
-    case 'addCourse':
-      if (state.courses.some((c) => c.code === action.course.code)) return state;
-      return { ...state, courses: [...state.courses, action.course] };
-    case 'setCourseSections':
-      return {
-        ...state,
-        courses: state.courses.map((c) => (c.code === action.code ? { ...c, ...action.course, sections: action.sections } : c)),
-      };
+    case 'addCourse': {
+      // Added at once, sections loaded in the background: the user can keep adding courses meanwhile.
+      const code = action.code.trim().toUpperCase();
+      if (!code || state.courses.some((c) => c.code === code)) return state;
+      const course = { code, title: action.title ?? null, credits: null, sections: null, status: 'loading', error: null };
+      return { ...state, courses: [...state.courses, course] };
+    }
+    case 'courseLoaded':
+      return updateCourse(state, action.code, {
+        title: action.course?.title ?? state.courses.find((c) => c.code === action.code)?.title ?? null,
+        credits: action.course?.credits ?? null,
+        sections: action.sections,
+        status: 'ready',
+        error: null,
+      });
+    case 'courseFailed':
+      return updateCourse(state, action.code, { sections: [], status: 'error', error: action.error });
     case 'removeCourse': {
       const { [action.code]: removed, ...selections } = state.selections;
       return { ...state, courses: state.courses.filter((c) => c.code !== action.code), selections };
     }
     case 'addManualCourse': {
       if (state.courses.some((c) => c.code === action.section.courseCode)) return state;
-      const course = { code: action.section.courseCode, title: action.title, credits: null, sections: [action.section], manual: true };
+      const course = {
+        code: action.section.courseCode, title: action.title, credits: null, sections: [action.section],
+        status: 'ready', error: null, manual: true,
+      };
       return {
         ...state,
         courses: [...state.courses, course],
@@ -108,14 +107,6 @@ export function reducer(state, action) {
       const { [action.code]: removed, ...selections } = state.selections;
       return { ...state, selections };
     }
-    case 'updateSelection':
-      return {
-        ...state,
-        selections: {
-          ...state.selections,
-          [action.code]: { ...state.selections[action.code], section: action.section },
-        },
-      };
 
     case 'setExcludeReadingWeek':
       return { ...state, excludeReadingWeek: action.value };

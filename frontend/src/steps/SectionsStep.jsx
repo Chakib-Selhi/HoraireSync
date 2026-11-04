@@ -1,6 +1,5 @@
 import { api } from '../api/client.js';
 import ErrorMessage from '../components/ErrorMessage.jsx';
-import ManualCourseForm from '../components/ManualCourseForm.jsx';
 import SectionCard from '../components/SectionCard.jsx';
 import StepLayout from '../components/StepLayout.jsx';
 import ui from '../components/ui.module.css';
@@ -45,36 +44,41 @@ function CourseSections({ course }) {
   const ordered = ranking.data
     ? ranking.data.map((r) => sections.find((s) => s.sectionNumber === r.sectionNumber)).filter(Boolean)
     : sections;
+  const remove = () => dispatch({ type: 'removeCourse', code: course.code });
 
   return (
     <section className={ui.stack} aria-labelledby={`course-${course.code}`}>
       <h3 id={`course-${course.code}`}>
         {course.code} {course.title}
       </h3>
-      <ErrorMessage error={ranking.error} />
-      {sections.length === 0 && !chosen && (
-        <>
+      {course.status === 'loading' && <p>{t('courses.loading')}</p>}
+      {course.status === 'error' && <ErrorMessage error={course.error} />}
+      {course.status === 'ready' && sections.length === 0 && (
+        <div className={ui.row}>
           <p className={ui.badge}>{t('sections.noSections')}</p>
-          <ManualCourseForm
-            idPrefix={`manual-${course.code}`}
-            fixedCode={course.code}
-            fixedTitle={course.title}
-            onSubmit={(section) => dispatch({ type: 'chooseSection', section })}
-          />
-        </>
+          <button type="button" className={ui.link} onClick={remove}>
+            {t('sections.removeCourse')}
+          </button>
+        </div>
       )}
-      {ordered.map((section) => (
-        <SectionCard
-          key={section.sectionNumber}
-          section={chosen?.section.sectionNumber === section.sectionNumber ? chosen.section : section}
-          score={scoreOf(section)}
-          chosen={chosen?.section.sectionNumber === section.sectionNumber}
-          onChoose={() => dispatch({ type: 'chooseSection', section })}
-          onUnchoose={() => dispatch({ type: 'unchooseSection', code: course.code })}
-        />
-      ))}
-      {sections.length === 0 && chosen && (
-        <SectionCard section={chosen.section} chosen onUnchoose={() => dispatch({ type: 'unchooseSection', code: course.code })} />
+      {course.manual ? (
+        <SectionCard section={chosen.section} chosen manual />
+      ) : (
+        ordered.map((section) => (
+          <SectionCard
+            key={section.sectionNumber}
+            section={section}
+            score={scoreOf(section)}
+            chosen={chosen?.section.sectionNumber === section.sectionNumber}
+            onChoose={() => dispatch({ type: 'chooseSection', section })}
+            onUnchoose={() => dispatch({ type: 'unchooseSection', code: course.code })}
+          />
+        ))
+      )}
+      {course.status === 'error' && (
+        <button type="button" className={ui.link} onClick={remove}>
+          {t('sections.removeCourse')}
+        </button>
       )}
     </section>
   );

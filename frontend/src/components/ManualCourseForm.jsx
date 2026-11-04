@@ -6,10 +6,10 @@ import MeetingEditor from './MeetingEditor.jsx';
 import ui from './ui.module.css';
 
 /**
- * Form to type a course and its meetings. Used for schools without adapter, and for a course whose
- * schedule is not published. `fixedCode` locks the code when the course already exists.
+ * Form to type a course and its meetings by hand (a course outside the UQAM catalog, or one whose schedule
+ * is not published). `fixedCode` locks the code when the course already exists.
  */
-export default function ManualCourseForm({ idPrefix = 'manual', fixedCode, fixedTitle, onSubmit }) {
+export default function ManualCourseForm({ idPrefix = 'manual', fixedCode, fixedTitle, onSubmit, onCancel }) {
   const [code, setCode] = useState(fixedCode ?? '');
   const [title, setTitle] = useState(fixedTitle ?? '');
   const [sectionNumber, setSectionNumber] = useState('');
@@ -68,6 +68,11 @@ export default function ManualCourseForm({ idPrefix = 'manual', fixedCode, fixed
         <button type="submit" className={ui.button}>
           {t('manual.save')}
         </button>
+        {onCancel && (
+          <button type="button" className={ui.link} onClick={onCancel}>
+            {t('manual.cancel')}
+          </button>
+        )}
       </div>
     </form>
   );

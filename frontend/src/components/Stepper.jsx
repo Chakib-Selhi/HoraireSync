@@ -1,10 +1,10 @@
 import { t } from '../i18n/index.js';
-import { STEPS, isStepAvailable } from '../state/reducer.js';
+import { STEPS } from '../state/reducer.js';
 import styles from './Stepper.module.css';
 
 /** Progress list. Previous steps are buttons so the user can go back to change a choice. */
 export default function Stepper({ state, onGoTo }) {
-  const visible = STEPS.map((name, index) => ({ name, index })).filter(({ index }) => isStepAvailable(state, index));
+  const visible = STEPS.map((name, index) => ({ name, index }));
   const position = visible.findIndex((s) => s.index === state.step) + 1;
   return (
     <nav aria-label={t('steps.label')} className={styles.stepper}>

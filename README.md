@@ -4,11 +4,11 @@
 
 **Français** · [English](#english)
 
-HoraireSync transforme une liste de cours universitaires en fichier `.ics` importable dans Apple Calendar, Google Calendar ou Outlook. On choisit son école, sa session et ses cours ; l'application récupère les groupes publiés, les classe selon ses préférences, détecte les conflits et génère l'horaire de la session.
+HoraireSync transforme une liste de cours de l'UQAM en fichier `.ics` importable dans Apple Calendar, Google Calendar ou Outlook. On choisit la prochaine session et ses cours ; l'application récupère les groupes publiés, les classe selon ses préférences, détecte les conflits et génère l'horaire de la session.
 
 **Démo :** [horairesync.vercel.app](https://horairesync.vercel.app) · **API :** [backend-production-68f55.up.railway.app/api/v1/schools](https://backend-production-68f55.up.railway.app/api/v1/schools)
 
-![Parcours complet : école, session, programme, cours, préférences, groupes, compte rendu et export](docs/images/demo.gif)
+![Parcours complet : session, programme, cours, préférences, groupes, compte rendu et export](docs/images/demo.gif)
 
 ## Problème résolu
 
@@ -18,11 +18,12 @@ Contrainte de conception : **aucune IA**. Toute l'extraction est déterministe (
 
 ## Fonctionnalités
 
-- UQAM prise en charge automatiquement (horaires, enseignants, modes, campus, examens, congés et relâche).
-- Mode manuel pour toute autre école : on saisit ses cours et on obtient quand même le fichier `.ics`.
+- Horaires de l'UQAM lus automatiquement (groupes, enseignants, modes, campus, examens, congés et relâche), pour la prochaine session, la seule dont les horaires sont publiés.
+- Cours du programme, cours hors programme par sigle, ou cours libre saisi à la main.
+- Ajout des cours instantané : les groupes se chargent en arrière-plan pendant qu'on continue.
 - Préférences facultatives (jour ou soir, mode, campus, jours libres) et classement des groupes avec le détail de chaque critère.
 - Détection des conflits entre séances hebdomadaires et examens.
-- Compte rendu en vue semaine et en liste, export bloqué tant qu'une donnée indispensable manque.
+- Compte rendu en vue semaine et en liste, export bloqué si un groupe n'a pas de jour ou d'heure.
 - Fichier `.ics` : séances récurrentes jusqu'à la fin de session, congés exclus, fuseau `America/Toronto`, UID stables.
 
 ![Compte rendu en vue semaine](docs/images/compte-rendu.png)
@@ -44,12 +45,12 @@ flowchart LR
     H --> S[(etudier.uqam.ca)]
 ```
 
-Le frontend ne parle qu'à l'API. Seul l'adaptateur connaît le HTML de l'école : ajouter une école ne touche ni les services ni le frontend. Les routes d'horaire (`/schedule/*`) sont sans état : le frontend renvoie les groupes qu'il détient, valeurs saisies à la main comprises, ce qui fait aussi fonctionner le mode manuel.
+Le frontend ne parle qu'à l'API. Seul l'adaptateur connaît le HTML de l'école : le backend reste prêt pour d'autres écoles, même si l'interface ne propose que l'UQAM. Les routes d'horaire (`/schedule/*`) sont sans état : le frontend renvoie les groupes qu'il détient, cours saisis à la main compris.
 
 | Route | Rôle |
 | --- | --- |
 | `GET /api/v1/schools` | Écoles et indicateur de prise en charge |
-| `GET /api/v1/schools/{id}/terms` | Sessions et leurs dates |
+| `GET /api/v1/schools/{id}/terms` | Prochaine session (la seule dont les horaires sont publiés) et ses dates |
 | `GET /api/v1/schools/{id}/programs?q=` | Recherche de programmes |
 | `GET /api/v1/schools/{id}/programs/{code}/courses` | Cours d'un programme |
 | `GET /api/v1/schools/{id}/terms/{term}/courses/{code}/sections` | Cours et groupes pour une session |
@@ -114,16 +115,16 @@ Le test d'export relit le fichier généré avec le parseur ical4j : il compte l
 4. Ajouter le délai de robots.txt de l'hôte dans `horairesync.http.crawl-delays` (`application.yml`) et retirer l'école de `unsupported-schools`.
 5. Écrire les tests sur les fixtures (voir `UqamAdapterTest`).
 
-Le registre découvre la classe au démarrage ; aucun service ni écran à modifier.
+Le registre découvre la classe au démarrage ; aucun service à modifier. Côté interface, l'école est aujourd'hui fixée à l'UQAM (`SCHOOL` dans `frontend/src/state/reducer.js`) : il faudra rétablir un écran de choix d'école.
 
 ## Limites connues
 
-- Une seule école automatisée (UQAM). Les autres passent par la saisie manuelle.
+- Une seule école (UQAM) et seulement la prochaine session.
 - L'UQAM ne publie pas le local des séances (seulement le campus) ni celui des examens ; le local n'est lu que si une remarque le donne explicitement.
-- La fin de session publiée est parfois ambiguë (« 23 avril ou 30 avril ou 2 mai ») : on utilise les dates « Du … au … » de chaque séance.
+- La fin de session publiée est parfois ambiguë (« 23 avril ou 30 avril ou 2 mai ») : on utilise les dates « Du … au … » de chaque séance ; pour un cours saisi à la main, la période la plus fréquente parmi les groupes publiés chargés.
 - La semaine de relâche dépend de la faculté : elle est exclue par défaut et l'utilisateur peut la garder.
 - Si le site de l'UQAM change de structure, l'adaptateur renvoie `PARSING_FAILED` et il faut le mettre à jour.
-- Premier chargement d'un cours jusqu'à 10 s quand plusieurs pages sont demandées d'affilée (délai de robots.txt), puis instantané grâce au cache.
+- Le site de l'UQAM demande 10 s entre deux requêtes (robots.txt) : les groupes de 4 nouveaux cours arrivent en environ 40 s, en arrière-plan. Un cours déjà demandé dans les 24 h est instantané (cache).
 - Cache en mémoire : il repart à vide à chaque redémarrage du backend.
 - Pas encore de sauvegarde dans le navigateur ni de générateur de combinaisons sans conflit (prévu en V1.1).
 - Import vérifié automatiquement par relecture du fichier ; la liste de vérification manuelle des 3 agendas est dans [docs/import-checklist.md](docs/import-checklist.md).
@@ -140,7 +141,7 @@ Outil non officiel, sans lien avec l'UQAM. Les données viennent des pages publi
 
 [Français](#horairesync) · **English**
 
-HoraireSync turns a list of university courses into an `.ics` file for Apple Calendar, Google Calendar or Outlook. Pick a school, a term and courses; the app reads the published sections, ranks them against your preferences, detects conflicts and generates the term schedule. The interface is in French; texts are centralized for a future English version.
+HoraireSync turns a list of UQAM courses into an `.ics` file for Apple Calendar, Google Calendar or Outlook. Pick the upcoming term and your courses; the app reads the published sections, ranks them against your preferences, detects conflicts and generates the term schedule. The interface is in French; texts are centralized for a future English version.
 
 **Demo:** [horairesync.vercel.app](https://horairesync.vercel.app) · **API:** [backend-production-68f55.up.railway.app/api/v1/schools](https://backend-production-68f55.up.railway.app/api/v1/schools)
 
@@ -152,8 +153,8 @@ Design constraint: **no AI**. Extraction is deterministic (Jsoup) and missing da
 
 ## Features
 
-- UQAM read automatically (sections, instructors, delivery modes, campuses, exams, holidays and reading week).
-- Manual mode for any other school.
+- UQAM schedules read automatically for the upcoming term, the only one with published sections.
+- Program courses, out-of-program courses by code, or free courses typed by hand; sections load in the background.
 - Optional preferences (day or evening, mode, campus, free days) with per-criterion ranking.
 - Conflict detection between weekly meetings and exams.
 - Weekly grid and list review; export blocked while required data is missing.
@@ -202,12 +203,12 @@ Backend on Railway from `backend/Dockerfile` (root directory `/backend`, healthc
 
 ## Known limitations
 
-- Only UQAM is automated; other schools use manual entry.
+- UQAM only, upcoming term only (the backend stays multi-school).
 - UQAM does not publish meeting rooms (only campuses) nor exam rooms.
 - Published term end dates can be ambiguous; per-meeting dates are used instead.
 - The reading week depends on the faculty: excluded by default, the user can keep it.
 - A change in UQAM's markup yields `PARSING_FAILED` until the adapter is updated.
-- First load of a course can take up to 10 s (robots.txt delay), then it is cached in memory (lost on restart).
+- UQAM's robots.txt asks for 10 s between requests: 4 new courses load in about 40 s in the background; cached for 24 h in memory (lost on restart).
 - No browser persistence or automatic conflict-free combinations yet (planned for v1.1).
 
 ## Notice

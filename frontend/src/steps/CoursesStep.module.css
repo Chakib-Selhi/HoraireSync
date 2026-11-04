@@ -1,0 +1,6 @@
+/* The program has about 50 courses: the list scrolls inside its card instead of stretching the page. */
+.programList {
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}

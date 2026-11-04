@@ -7,7 +7,7 @@ import WeekView from '../components/WeekView.jsx';
 import ui from '../components/ui.module.css';
 import { t } from '../i18n/index.js';
 import { dayLabel, describePath, formatDate, formatTime, groupNumber, sectionLabel } from '../lib/format.js';
-import { essentialProblems, oneOffMeetings, stillMissing, weekLayout } from '../lib/schedule.js';
+import { essentialProblems, oneOffMeetings, termBounds, weekLayout } from '../lib/schedule.js';
 import { useAsync } from '../lib/useAsync.js';
 import { orderedSelections } from '../state/reducer.js';
 import { useSchedule } from '../state/ScheduleContext.jsx';
@@ -22,14 +22,8 @@ export default function ReviewStep() {
     () => api.conflicts({ schoolId: state.school.id, termId: state.term?.id, selections }),
     [JSON.stringify(selections)],
   );
-  const blocking = essentialProblems(selections, state.term);
-  // One line per section, listing its optional fields still empty with the meeting they belong to.
-  const optionalGaps = selections
-    .map(({ section }) => ({
-      section,
-      paths: stillMissing(section).filter((path) => !blocking.some((b) => b.courseCode === section.courseCode && b.path === path)),
-    }))
-    .filter((gap) => gap.paths.length > 0);
+  const bounds = termBounds(state.term, state.courses);
+  const blocking = essentialProblems(selections, { startDate: bounds.start, endDate: bounds.end });
   const blocks = weekLayout(selections, conflicts.data ?? []);
   const exams = oneOffMeetings(selections);
 
@@ -86,40 +80,19 @@ export default function ReviewStep() {
           )}
         </div>
 
-        <div>
-          <h3>{t('review.stillMissing')}</h3>
-          {blocking.length === 0 ? (
-            <p className={ui.badgeSuccess}>{t('review.noneMissing')}</p>
-          ) : (
-            <>
-              <p className={ui.error} role="alert">{t('review.blocking')}</p>
-              <ul>
-                {blocking.map((p, i) => (
-                  <li key={i}>
-                    {sectionLabel(p.courseCode, p.sectionNumber)} :{' '}
-                    {describePath(selections.find((s) => s.section.courseCode === p.courseCode).section, p.path)}{' '}
-                    <button type="button" className={ui.link} onClick={() => dispatch({ type: 'goTo', step: 6 })}>
-                      {t('nav.edit')}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {optionalGaps.length > 0 && (
-            <details>
-              <summary>{t('review.optionalGaps', { count: optionalGaps.reduce((n, g) => n + g.paths.length, 0) })}</summary>
-              <ul className={ui.hint}>
-                {optionalGaps.map(({ section, paths }) => (
-                  <li key={section.courseCode}>
-                    {sectionLabel(section.courseCode, section.sectionNumber)} :{' '}
-                    {paths.map((path) => describePath(section, path)).join(' ; ')}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </div>
+        {blocking.length > 0 && (
+          <div>
+            <p className={ui.error} role="alert">{t('review.blocking')}</p>
+            <ul>
+              {blocking.map((p, i) => (
+                <li key={i}>
+                  {sectionLabel(p.courseCode, p.sectionNumber)} :{' '}
+                  {describePath(selections.find((s) => s.section.courseCode === p.courseCode).section, p.path)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </StepLayout>
   );

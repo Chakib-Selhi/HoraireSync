@@ -2,31 +2,29 @@ import Stepper from './components/Stepper.jsx';
 import { t } from './i18n/index.js';
 import { STEPS } from './state/reducer.js';
 import { useSchedule } from './state/ScheduleContext.jsx';
+import { useCourseLoader } from './state/useCourseLoader.js';
 import CoursesStep from './steps/CoursesStep.jsx';
 import ExportStep from './steps/ExportStep.jsx';
-import MissingStep from './steps/MissingStep.jsx';
 import PreferencesStep from './steps/PreferencesStep.jsx';
 import ProgramStep from './steps/ProgramStep.jsx';
 import ReviewStep from './steps/ReviewStep.jsx';
-import SchoolStep from './steps/SchoolStep.jsx';
 import SectionsStep from './steps/SectionsStep.jsx';
 import TermStep from './steps/TermStep.jsx';
 import styles from './App.module.css';
 
 const SCREENS = {
-  school: SchoolStep,
   term: TermStep,
   program: ProgramStep,
   courses: CoursesStep,
   preferences: PreferencesStep,
   sections: SectionsStep,
-  missing: MissingStep,
   review: ReviewStep,
   export: ExportStep,
 };
 
 export default function App() {
   const { state, dispatch } = useSchedule();
+  useCourseLoader(state, dispatch);
   const Screen = SCREENS[STEPS[state.step]];
   return (
     <>

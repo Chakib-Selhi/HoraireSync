@@ -50,3 +50,11 @@
   align-items: center;
   margin-top: 8px;
 }
+
+.details {
+  margin-top: 8px;
+}
+
+.details p {
+  margin: 4px 0;
+}

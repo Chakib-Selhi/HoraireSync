@@ -1,6 +1,6 @@
 # HoraireSync frontend
 
-Interface React (Vite, JavaScript) du parcours en 9 étapes : école, session, programme, cours, préférences, groupes, données manquantes, compte rendu, export.
+Interface React (Vite, JavaScript) du parcours en 7 étapes : session, programme, cours, préférences, groupes, compte rendu, export. L'école est fixée à l'UQAM.
 
 ## Lancer
 
@@ -29,6 +29,6 @@ En production, `VITE_API_URL` donne l'adresse du backend (ex. `https://api.exemp
 
 - Pas de routeur ni de Redux : le parcours est linéaire et l'état tient dans un reducer testable sans React.
 - Les règles de blocage de l'export sont les mêmes que celles du backend (`essentialProblems`), pour prévenir l'utilisateur avant l'appel.
-- Un champ rempli reste affiché dans l'étape « Données manquantes », pour pouvoir le corriger.
+- Les cours s'ajoutent tout de suite ; `useCourseLoader` (monté dans `App`) charge leurs groupes en arrière-plan, pour que l'utilisateur n'attende pas le délai de 10 s du site entre deux cours.
 - Accessibilité : chaque champ a un libellé, le titre de chaque étape reçoit le focus, les erreurs sont annoncées (`role="alert"`), la vue semaine est aussi une liste lisible par un lecteur d'écran.
-- Mode manuel (école non prise en charge) : les étapes programme, préférences et groupes sont sautées.
+- Cours libre : saisi à la main dans l'étape Cours, il est sélectionné d'office. Ses séances prennent la période la plus fréquente des groupes publiés.

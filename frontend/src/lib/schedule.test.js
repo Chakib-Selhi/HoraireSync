@@ -1,17 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addMeeting,
   campusesOf,
   emptyMeeting,
   essentialProblems,
   exportPayload,
-  getField,
-  isEssentialPath,
   manualSection,
   oneOffMeetings,
-  removeMeeting,
-  setField,
-  stillMissing,
+  termBounds,
   visibleDays,
   weekLayout,
 } from './schedule.js';
@@ -29,50 +24,6 @@ const section = (over = {}) => ({
 
 const term = { id: '20271', label: 'Hiver 2027', startDate: '2027-01-11', endDate: null,
   excludedDates: ['2027-03-29'], readingWeekDates: ['2027-03-01', '2027-03-02'] };
-
-describe('setField', () => {
-  it('sets a section field and removes it from missingFields', () => {
-    const updated = setField(section(), 'instructor', 'Ada Lovelace');
-    expect(updated.instructor).toBe('Ada Lovelace');
-    expect(updated.missingFields).not.toContain('instructor');
-  });
-
-  it('sets a meeting field without touching the other meetings', () => {
-    const original = section();
-    const updated = setField(original, 'meetings[1].room', 'PK-1234');
-    expect(updated.meetings[1].room).toBe('PK-1234');
-    expect(updated.meetings[0]).toBe(original.meetings[0]);
-    expect(updated.missingFields).toEqual(['instructor', 'meetings[0].room']);
-    expect(original.meetings[1].room).toBeNull();
-  });
-
-  it('puts the path back when the value is cleared', () => {
-    const filled = setField(section(), 'instructor', 'Ada');
-    expect(setField(filled, 'instructor', '  ').missingFields).toContain('instructor');
-  });
-
-  it('reads values back with getField', () => {
-    expect(getField(section(), 'meetings[0].day')).toBe('MONDAY');
-    expect(getField(section(), 'instructor')).toBeNull();
-    expect(getField(section(), 'meetings[9].day')).toBeNull();
-  });
-});
-
-describe('add and remove meetings', () => {
-  it('adding a meeting clears the "no meetings" flag', () => {
-    const empty = section({ meetings: [], missingFields: ['meetings'] });
-    const updated = addMeeting(empty);
-    expect(updated.meetings).toHaveLength(1);
-    expect(updated.missingFields).toEqual([]);
-  });
-
-  it('removing a meeting renumbers the following paths', () => {
-    const s = section({ meetings: [meeting(), meeting(), meeting()],
-      missingFields: ['meetings[0].room', 'meetings[1].room', 'meetings[2].room', 'instructor'] });
-    expect(removeMeeting(s, 1).missingFields).toEqual(['meetings[0].room', 'meetings[1].room', 'instructor']);
-    expect(removeMeeting(s, 1).meetings).toHaveLength(2);
-  });
-});
 
 describe('essentialProblems', () => {
   it('accepts a complete schedule', () => {
@@ -99,22 +50,6 @@ describe('essentialProblems', () => {
   it('does not ask dates for one-off meetings', () => {
     const exam = meeting({ onlyDate: '2027-02-27', day: 'SATURDAY', firstDate: null, lastDate: null, type: 'EXAM' });
     expect(essentialProblems([{ section: section({ meetings: [exam] }) }], { startDate: null, endDate: null })).toEqual([]);
-  });
-});
-
-describe('isEssentialPath and stillMissing', () => {
-  it('classifies paths', () => {
-    expect(isEssentialPath('meetings[0].day')).toBe(true);
-    expect(isEssentialPath('meetings[0].room')).toBe(false);
-    expect(isEssentialPath('instructor')).toBe(false);
-    expect(isEssentialPath('meetings[0].lastDate', meeting(), term)).toBe(true);
-    expect(isEssentialPath('meetings[0].firstDate', meeting(), term)).toBe(false);
-    expect(isEssentialPath('meetings')).toBe(true);
-  });
-
-  it('ignores paths the user already filled', () => {
-    const s = section({ instructor: 'Ada' });
-    expect(stillMissing(s)).toEqual(['meetings[0].room', 'meetings[1].room']);
   });
 });
 
@@ -155,6 +90,24 @@ describe('weekLayout', () => {
   });
 });
 
+describe('termBounds', () => {
+  const published = { sections: [section(), section({ meetings: [meeting({ lastDate: '2027-04-23' })] }),
+    section({ meetings: [meeting()] })] };
+
+  it('uses the most common published range when the calendar end is ambiguous', () => {
+    expect(termBounds(term, [published])).toEqual({ start: '2027-01-11', end: '2027-05-02' });
+  });
+
+  it('keeps the calendar dates when they are known', () => {
+    expect(termBounds({ ...term, endDate: '2027-04-30' }, [published]).end).toBe('2027-04-30');
+  });
+
+  it('ignores manual courses and exams, and stays empty without published sections', () => {
+    const manual = { manual: true, sections: [section({ meetings: [meeting({ lastDate: '2030-01-01' })] })] };
+    expect(termBounds({ startDate: null, endDate: null }, [manual])).toEqual({ start: null, end: null });
+  });
+});
+
 describe('exportPayload', () => {
   const base = { school: { id: 'uqam' }, term, selections: [{ courseTitle: 'X', section: section() }] };
 
@@ -164,10 +117,12 @@ describe('exportPayload', () => {
     expect(exportPayload({ ...base, excludeReadingWeek: false }).excludedDates).toEqual(['2027-03-29']);
   });
 
-  it('carries the term dates and labels', () => {
+  it('carries the term labels and dates, completed from the published sections', () => {
     expect(exportPayload({ ...base, excludeReadingWeek: false })).toMatchObject({
       schoolId: 'uqam', termId: '20271', termLabel: 'Hiver 2027', termStart: '2027-01-11', termEnd: null,
     });
+    expect(exportPayload({ ...base, courses: [{ sections: [section()] }], excludeReadingWeek: false }).termEnd)
+      .toBe('2027-05-02');
   });
 });
 

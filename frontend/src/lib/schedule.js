@@ -1,12 +1,10 @@
 /**
  * Pure functions on the schedule data. No React here, so all rules are unit tested directly.
  *
- * Paths in `missingFields` come from the backend: "instructor", "mode", "campus", "meetings"
- * (no schedule published) and "meetings[i].field".
+ * Problem paths follow the backend's missingFields: "meetings" (no schedule) and "meetings[i].field".
  */
 import { DAYS, toMinutes } from './format.js';
 
-const MEETING_PATH = /^meetings\[(\d+)\]\.(\w+)$/;
 const ESSENTIAL_MEETING_FIELDS = ['day', 'start', 'end'];
 
 export const isBlank = (value) => value == null || (typeof value === 'string' && value.trim() === '');
@@ -40,53 +38,6 @@ export function manualSection({ courseCode, sectionNumber, instructor, mode, mee
   };
 }
 
-/** Value at a missing-field path. */
-export function getField(section, path) {
-  const m = MEETING_PATH.exec(path);
-  if (m) {
-    return section.meetings[Number(m[1])]?.[m[2]] ?? null;
-  }
-  return section[path] ?? null;
-}
-
-/**
- * Returns a copy of the section with the value set. The path leaves missingFields when the value is
- * filled and comes back when it is cleared, so the badge always reflects the current value.
- */
-export function setField(section, path, rawValue) {
-  const value = isBlank(rawValue) ? null : rawValue;
-  const m = MEETING_PATH.exec(path);
-  let next;
-  if (m) {
-    const index = Number(m[1]);
-    const meetings = section.meetings.map((meeting, i) => (i === index ? { ...meeting, [m[2]]: value } : meeting));
-    next = { ...section, meetings };
-  } else {
-    next = { ...section, [path]: value };
-  }
-  const others = section.missingFields.filter((f) => f !== path);
-  return { ...next, missingFields: value == null ? [...others, path] : others };
-}
-
-export function addMeeting(section, meeting = emptyMeeting()) {
-  const missingFields = section.missingFields.filter((f) => f !== 'meetings');
-  return { ...section, meetings: [...section.meetings, meeting], missingFields };
-}
-
-/** Removes a meeting and renumbers the meeting paths that follow it. */
-export function removeMeeting(section, index) {
-  const missingFields = section.missingFields
-    .map((field) => {
-      const m = MEETING_PATH.exec(field);
-      if (!m) return field;
-      const i = Number(m[1]);
-      if (i === index) return null;
-      return i > index ? `meetings[${i - 1}].${m[2]}` : field;
-    })
-    .filter(Boolean);
-  return { ...section, meetings: section.meetings.filter((_, i) => i !== index), missingFields };
-}
-
 /**
  * Values the export cannot do without, mirroring the backend validation:
  * day, start and end of each meeting, an end after the start, and dates for weekly meetings
@@ -114,25 +65,6 @@ export function essentialProblems(selections, term) {
     });
   }
   return problems;
-}
-
-/** True when the path is required for the export (given the term dates). */
-export function isEssentialPath(path, meeting, term) {
-  if (path === 'meetings') return true;
-  const m = MEETING_PATH.exec(path);
-  if (!m) return false;
-  if (ESSENTIAL_MEETING_FIELDS.includes(m[2])) return true;
-  if (m[2] === 'firstDate') return !meeting?.onlyDate && isBlank(term?.startDate);
-  if (m[2] === 'lastDate') return !meeting?.onlyDate && isBlank(term?.endDate);
-  return false;
-}
-
-/** Missing paths that still have no value (a section may have been completed by the user). */
-export function stillMissing(section) {
-  return section.missingFields.filter((path) => {
-    if (path === 'meetings') return section.meetings.length === 0;
-    return isBlank(getField(section, path));
-  });
 }
 
 /** Distinct campuses of a list of courses (for the preferences screen), sorted. */
@@ -215,18 +147,48 @@ export function oneOffMeetings(selections) {
     .sort((a, b) => a.meeting.onlyDate.localeCompare(b.meeting.onlyDate) || (a.meeting.start ?? '').localeCompare(b.meeting.start ?? ''));
 }
 
+/** Most frequent value of a list, or null. Ties go to the latest value. */
+function mostFrequent(values) {
+  const counts = new Map();
+  for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+  let best = null;
+  for (const [value, count] of counts) {
+    if (best == null || count > counts.get(best) || (count === counts.get(best) && value > best)) best = value;
+  }
+  return best;
+}
+
+/**
+ * Term bounds for meetings typed by hand, which have no dates of their own. The school's calendar may not state
+ * the end of term clearly ("23 avril ou 30 avril ou 2 mai"), so the dates come from the published sections of the
+ * loaded courses: their most common "Du ... au ..." range is the regular term (e.g. 11 janvier to 2 mai 2027).
+ * Nothing is guessed: with no published section, the term's own dates (possibly null) are kept.
+ */
+export function termBounds(term, courses) {
+  const weekly = courses
+    .filter((c) => !c.manual)
+    .flatMap((c) => c.sections ?? [])
+    .flatMap((s) => s.meetings)
+    .filter((m) => !m.onlyDate);
+  return {
+    start: term?.startDate ?? mostFrequent(weekly.map((m) => m.firstDate).filter(Boolean)),
+    end: term?.endDate ?? mostFrequent(weekly.map((m) => m.lastDate).filter(Boolean)),
+  };
+}
+
 /** Body of POST /schedule/export. */
-export function exportPayload({ school, term, selections, excludeReadingWeek }) {
+export function exportPayload({ school, term, courses = [], selections, excludeReadingWeek }) {
   const excluded = new Set(term?.excludedDates ?? []);
   if (excludeReadingWeek) {
     for (const d of term?.readingWeekDates ?? []) excluded.add(d);
   }
+  const bounds = termBounds(term, courses);
   return {
-    schoolId: school?.id ?? 'manuel',
+    schoolId: school?.id ?? 'uqam',
     termId: term?.id ?? 'session',
     termLabel: term?.label ?? null,
-    termStart: term?.startDate ?? null,
-    termEnd: term?.endDate ?? null,
+    termStart: bounds.start,
+    termEnd: bounds.end,
     excludedDates: [...excluded].sort(),
     selections,
   };
