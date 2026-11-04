@@ -1,0 +1,43 @@
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  margin-bottom: var(--space);
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--primary);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.footer {
+  margin-top: 48px;
+  padding-bottom: 24px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: 16px;
+  top: 8px;
+  background: var(--surface);
+  padding: 8px;
+  z-index: 10;
+}
