@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Sections chosen for one term.
  *
- * @param schoolId   school identifier (may be an unsupported school in manual mode)
+ * @param schoolId   school identifier
  * @param termId     term identifier
  * @param selections chosen sections
  */

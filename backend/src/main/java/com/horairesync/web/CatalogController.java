@@ -6,6 +6,7 @@ import com.horairesync.model.Program;
 import com.horairesync.model.School;
 import com.horairesync.model.Term;
 import com.horairesync.service.CatalogService;
+import com.horairesync.service.TermPolicy;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class CatalogController {
 
     private final CatalogService catalog;
+    private final TermPolicy termPolicy;
 
-    public CatalogController(CatalogService catalog) {
+    public CatalogController(CatalogService catalog, TermPolicy termPolicy) {
         this.catalog = catalog;
+        this.termPolicy = termPolicy;
     }
 
     @GetMapping
@@ -29,9 +32,10 @@ public class CatalogController {
         return catalog.schools();
     }
 
+    /** Only the upcoming term: it is the only one whose sections are published and still to choose. */
     @GetMapping("/{schoolId}/terms")
     public List<Term> terms(@PathVariable String schoolId) {
-        return catalog.terms(schoolId);
+        return termPolicy.plannable(catalog.terms(schoolId));
     }
 
     @GetMapping("/{schoolId}/programs")

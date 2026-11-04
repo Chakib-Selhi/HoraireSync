@@ -30,6 +30,14 @@ class CatalogApiIntegrationTest {
         FixtureHtmlSource fixtureHtmlSource() {
             return FixtureHtmlSource.uqam();
         }
+
+        /** The fixtures were recorded on 2026-11-04, during the fall term. */
+        @Bean
+        @Primary
+        java.time.Clock fixedClock() {
+            java.time.ZoneId zone = java.time.ZoneId.of("America/Toronto");
+            return java.time.Clock.fixed(java.time.Instant.parse("2026-11-04T17:00:00Z"), zone);
+        }
     }
 
     @Autowired
@@ -39,12 +47,12 @@ class CatalogApiIntegrationTest {
     private HtmlSource html;
 
     @Test
-    void schoolsListUqamAndManualSchools() throws Exception {
+    void schoolsListOnlyUqam() throws Exception {
         mvc.perform(get("/api/v1/schools"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("uqam"))
-                .andExpect(jsonPath("$[0].supported").value(true))
-                .andExpect(jsonPath("$[?(@.id == 'mcgill')].supported").value(false));
+                .andExpect(jsonPath("$[0].supported").value(true));
     }
 
     @Test
@@ -82,7 +90,9 @@ class CatalogApiIntegrationTest {
     void termsProgramsAndProgramCourses() throws Exception {
         mvc.perform(get("/api/v1/schools/uqam/terms"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id == '20271')].startDate").value("2027-01-11"));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("20271"))
+                .andExpect(jsonPath("$[0].startDate").value("2027-01-11"));
         mvc.perform(get("/api/v1/schools/uqam/programs").param("q", "génie logiciel"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.code == '7416')].type").value("Baccalauréat"));

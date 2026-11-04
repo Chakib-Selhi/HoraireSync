@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /** Checks routing and the single error format; the service is mocked. */
 @WebMvcTest(CatalogController.class)
+@org.springframework.context.annotation.Import({com.horairesync.service.TermPolicy.class, com.horairesync.config.ClockConfig.class})
 class CatalogControllerTest {
 
     @Autowired

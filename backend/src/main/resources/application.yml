@@ -29,12 +29,3 @@ horairesync:
       "[etudier.uqam.ca]": 10s
   uqam:
     base-url: https://etudier.uqam.ca
-  # Schools listed in the UI that have no adapter yet: the user switches to manual entry
-  unsupported-schools:
-    - { id: udem, name: "Université de Montréal" }
-    - { id: concordia, name: "Concordia University" }
-    - { id: mcgill, name: "McGill University" }
-    - { id: ets, name: "École de technologie supérieure" }
-    - { id: polymtl, name: "Polytechnique Montréal" }
-    - { id: usherbrooke, name: "Université de Sherbrooke" }
-    - { id: ulaval, name: "Université Laval" }
