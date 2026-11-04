@@ -28,6 +28,9 @@ public interface SchoolAdapter {
     /** Courses listed in a program. */
     List<Course> fetchProgramCourses(String programCode);
 
+    /** A course with its title and credits; throws {@code COURSE_NOT_FOUND} for an unknown code. */
+    Course fetchCourse(String courseCode);
+
     /** Sections of a course in a term; empty when the term schedule is not published. */
     List<Section> fetchSections(String termId, String courseCode);
 }

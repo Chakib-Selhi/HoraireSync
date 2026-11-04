@@ -101,7 +101,7 @@ div.ligne_cours[data-sigle]   un cours (id = sigle)
 h3.titre_bloc                 bloc de cours : "Informatique (48 crédits)", "Cours au choix en informatique (15 crédits)"…
 ```
 
-- 48 cours distincts pour le programme 7416 (certains sigles apparaissent deux fois).
+- 47 cours distincts pour le programme 7416 (48 lignes : INF6200 apparaît deux fois).
 - Les crédits par cours ne sont **pas** sur cette page ; ils sont sur la page du cours.
 - Les horaires par cours (onglets) y sont chargés en AJAX : on ne les utilise pas, la page `/cours` suffit.
 
@@ -132,3 +132,26 @@ Les années ne sont pas dans les cellules ; elles se déduisent du titre du trim
 6. **Examens.** Parser « Examens: 27 févr. 09:30 à 12:30 … » en `Meeting` de type `EXAM` avec `onlyDate` (année déduite de la session), ou ignorer les examens au MVP et les laisser en saisie manuelle?
 7. **Semaine de relâche.** Elle dépend de la faculté. L'exclure par défaut (avec possibilité de la désactiver dans l'interface), ou ne rien exclure et laisser l'utilisateur la cocher?
 8. **Fixtures supplémentaires.** Pour la phase 1, j'ajouterai `programmes.html`, `calendriers.html` et `cours-inexistant.html` (déjà téléchargées pendant l'analyse, aucune requête de plus). D'accord?
+
+## 10. Décisions validées (4 novembre 2026)
+
+Toutes les propositions de la section 9 ont été acceptées. Mise en œuvre en phase 1 :
+
+| # | Décision | Effet dans le code |
+| --- | --- | --- |
+| 1 | Respect de robots.txt, avis « données publiques, outil non officiel » | `crawl-delays` dans `application.yml`, avis dans le README et l'interface |
+| 2 | Récurrence bornée par les dates « Du … au … » de chaque séance | `Meeting.firstDate` et `Meeting.lastDate` (ajouts au modèle du PRD) |
+| 3 | Campus par séance ; campus du groupe seulement s'il est commun | `Meeting.campus` (ajout) ; sinon `Section.campus = null` et `campus` dans `missingFields` |
+| 4 | Atelier et Exercices = laboratoire | `MeetingType.LAB` |
+| 5 | Local tiré d'une remarque explicite | Seulement si la phrase contient un seul code de local et un seul type de séance |
+| 6 | Examens extraits des remarques | `Meeting` de type `EXAM` avec `onlyDate`, année = année de la session |
+| 7 | Semaine de relâche exclue par défaut, désactivable | `Term.readingWeekDates` et `Term.readingWeekNote`, séparés des congés (`excludedDates`) |
+| 8 | Fixtures supplémentaires | `programmes.html`, `calendriers.html`, `cours-inexistant.html`, `programme-inexistant.html` |
+
+Autres ajustements faits pendant la phase 1 :
+
+- `Program.type` (Baccalauréat, Certificat…) : la liste publie le type à part du titre.
+- `Course.offeredTermIds` : sessions où la page du cours publie des groupes. Vide pour la liste d'un programme, où ces marqueurs sont ajoutés en JavaScript.
+- `Section.notes` : remarques publiées, affichées telles quelles à l'utilisateur.
+- `SchoolAdapter.fetchCourse` : titre et crédits d'un cours, nécessaires pour ajouter un cours par sigle.
+- La fin de session ambiguë (« 23 avril ou 30 avril ou 2 mai ») reste `null` avec `endDate` dans `missingFields`.
