@@ -18,10 +18,13 @@ horairesync:
   http:
     user-agent: "HoraireSync/0.1 (+https://github.com/horairesync/horairesync; student portfolio project)"
     timeout: 8s
+    # Minimum delay between two requests to the same host
+    default-crawl-delay: 5s
+    crawl-delays:
+      # robots.txt of etudier.uqam.ca asks for Crawl-delay: 10
+      "[etudier.uqam.ca]": 10s
   uqam:
     base-url: https://etudier.uqam.ca
-    # robots.txt of etudier.uqam.ca asks for Crawl-delay: 10
-    crawl-delay: 10s
   # Schools listed in the UI that have no adapter yet: the user switches to manual entry
   unsupported-schools:
     - { id: udem, name: "Université de Montréal" }
