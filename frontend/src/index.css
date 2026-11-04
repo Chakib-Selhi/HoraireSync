@@ -1,0 +1,76 @@
+/* Design tokens and base styles. Colors meet WCAG AA contrast on their backgrounds. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1b1f24;
+  --muted: #4d5560;
+  --border: #d3d8de;
+  --primary: #174ea6;
+  --primary-text: #ffffff;
+  --primary-soft: #e6eefb;
+  --danger: #a51d24;
+  --danger-soft: #fdecec;
+  --warning: #7a4d00;
+  --warning-soft: #fff4dc;
+  --success: #1e6b34;
+  --success-soft: #e5f4ea;
+  --focus: #f0a500;
+  --radius: 8px;
+  --space: 16px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171b;
+    --surface: #1d2126;
+    --text: #e8eaed;
+    --muted: #b0b7c0;
+    --border: #39404a;
+    --primary: #8ab4f8;
+    --primary-text: #0b1d3a;
+    --primary-soft: #1f2d45;
+    --danger: #f28b82;
+    --danger-soft: #3b1f1f;
+    --warning: #fdd663;
+    --warning-soft: #3a3117;
+    --success: #81c995;
+    --success-soft: #1c3324;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+}
+
+button, input, select {
+  font: inherit;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
