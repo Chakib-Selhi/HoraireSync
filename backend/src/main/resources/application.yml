@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: horairesync
+  jackson:
+    default-property-inclusion: always
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+
+horairesync:
+  # Origins allowed to call the API from a browser (Vite dev server by default)
+  cors-allowed-origins: http://localhost:5173
+  cache:
+    ttl: 24h
+    maximum-size: 2000
+  http:
+    user-agent: "HoraireSync/0.1 (+https://github.com/horairesync/horairesync; student portfolio project)"
+    timeout: 8s
+  uqam:
+    base-url: https://etudier.uqam.ca
+    # robots.txt of etudier.uqam.ca asks for Crawl-delay: 10
+    crawl-delay: 10s
+  # Schools listed in the UI that have no adapter yet: the user switches to manual entry
+  unsupported-schools:
+    - { id: udem, name: "Université de Montréal" }
+    - { id: concordia, name: "Concordia University" }
+    - { id: mcgill, name: "McGill University" }
+    - { id: ets, name: "École de technologie supérieure" }
+    - { id: polymtl, name: "Polytechnique Montréal" }
+    - { id: usherbrooke, name: "Université de Sherbrooke" }
+    - { id: ulaval, name: "Université Laval" }
