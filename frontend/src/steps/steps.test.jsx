@@ -12,6 +12,8 @@ import SectionsStep from './SectionsStep.jsx';
 import TermStep from './TermStep.jsx';
 
 vi.mock('../api/client.js', () => ({
+  warmUp: vi.fn(),
+  onSlowRequests: vi.fn(() => () => {}),
   api: {
     terms: vi.fn(),
     rank: vi.fn(),

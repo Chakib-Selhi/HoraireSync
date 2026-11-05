@@ -9,6 +9,7 @@ const fr = {
     disclaimer:
       "Outil non officiel. Les horaires viennent des pages publiques des écoles et peuvent changer : vérifiez-les avant l'inscription.",
     skipToContent: 'Aller au contenu',
+    waking: 'Le serveur démarre, cela peut prendre jusqu’à une minute après une période d’inactivité. Merci de patienter…',
   },
   steps: {
     label: 'Étapes',

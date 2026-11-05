@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
+import { warmUp } from './api/client.js';
 import Stepper from './components/Stepper.jsx';
+import WakeBanner from './components/WakeBanner.jsx';
 import { t } from './i18n/index.js';
 import { STEPS } from './state/reducer.js';
 import { useSchedule } from './state/ScheduleContext.jsx';
@@ -25,6 +28,9 @@ const SCREENS = {
 export default function App() {
   const { state, dispatch } = useSchedule();
   useCourseLoader(state, dispatch);
+  useEffect(() => {
+    warmUp();
+  }, []);
   const Screen = SCREENS[STEPS[state.step]];
   return (
     <>
@@ -37,6 +43,7 @@ export default function App() {
           <p className={styles.tagline}>{t('app.tagline')}</p>
         </div>
       </header>
+      <WakeBanner />
       <main id="main" className={styles.inner}>
         <Stepper state={state} onGoTo={(step) => dispatch({ type: 'goTo', step })} />
         {/* key: each step is a fresh screen, so its heading receives focus */}

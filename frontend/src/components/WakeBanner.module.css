@@ -1,0 +1,39 @@
+.live {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0 0 var(--space);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--text);
+  border-left: 4px solid var(--primary);
+}
+
+.spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--primary);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
