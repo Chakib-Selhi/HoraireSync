@@ -6,7 +6,7 @@
 
 HoraireSync transforme une liste de cours de l'UQAM en fichier `.ics` importable dans Apple Calendar, Google Calendar ou Outlook. On choisit la prochaine session et ses cours ; l'application récupère les groupes publiés, les classe selon ses préférences, détecte les conflits et génère l'horaire de la session.
 
-**Démo :** [horairesync.vercel.app](https://horairesync.vercel.app) · **API :** [backend-production-68f55.up.railway.app/api/v1/schools](https://backend-production-68f55.up.railway.app/api/v1/schools)
+**Démo :** [horairesync.vercel.app](https://horairesync.vercel.app) · **API :** [horairesync-api.onrender.com/api/v1/schools](https://horairesync-api.onrender.com/api/v1/schools)
 
 ![Parcours complet : session, programme, cours, préférences, groupes, compte rendu et export](docs/images/demo.gif)
 
@@ -34,7 +34,7 @@ Contrainte de conception : **aucune IA**. Toute l'extraction est déterministe (
 flowchart LR
     U[Navigateur] --> F["Frontend React + Vite<br/>(Vercel)"]
     F -- "JSON /api/v1" --> C
-    subgraph B["Backend Spring Boot 3, Java 21 (Railway, Docker)"]
+    subgraph B["Backend Spring Boot 3, Java 21 (Render, Docker)"]
         C[Contrôleurs REST<br/>format d'erreur unique] --> CS[CatalogService<br/>cache Caffeine 24 h]
         C --> SV[ConflictService<br/>RankingService<br/>IcsExportService]
         CS --> R[SchoolAdapterRegistry]
@@ -103,8 +103,8 @@ Le test d'export relit le fichier généré avec le parseur ical4j : il compte l
 
 | Partie | Hébergeur | Configuration |
 | --- | --- | --- |
-| Backend | Railway (image Docker) | Service relié au dépôt : dossier racine `/backend`, `Dockerfile`, vérification de santé `/api/v1/schools`, redéploiement à chaque push touchant `backend/`. Variables : `CORS_ALLOWED_ORIGINS` (adresse Vercel, motifs acceptés pour les aperçus) et `PORT=8080`. |
-| Frontend | Vercel | `frontend/vercel.json`, dossier racine `frontend`, redéploiement à chaque push. Variable `VITE_API_URL` = adresse Railway. |
+| Backend | Render, forfait gratuit (image Docker) | Service web relié au dépôt : contexte `backend/`, `backend/Dockerfile`, redéploiement à chaque push sur `main`. Variable `CORS_ALLOWED_ORIGINS` (adresse Vercel, motifs acceptés pour les aperçus). Render fournit `PORT`. |
+| Frontend | Vercel | `frontend/vercel.json`, dossier racine `frontend`, redéploiement à chaque push. Variable `VITE_API_URL` = adresse Render. |
 | CI | GitHub Actions | `.github/workflows/ci.yml` : tests backend et frontend, build de l'image Docker. |
 
 ## Ajouter une école
@@ -125,7 +125,8 @@ Le registre découvre la classe au démarrage ; aucun service à modifier. Côt�
 - La semaine de relâche dépend de la faculté : elle est exclue par défaut et l'utilisateur peut la garder.
 - Si le site de l'UQAM change de structure, l'adaptateur renvoie `PARSING_FAILED` et il faut le mettre à jour.
 - Le site de l'UQAM demande 10 s entre deux requêtes (robots.txt) : les groupes de 4 nouveaux cours arrivent en environ 40 s, en arrière-plan. Un cours déjà demandé dans les 24 h est instantané (cache).
-- Cache en mémoire : il repart à vide à chaque redémarrage du backend.
+- L'API tourne sur le forfait gratuit de Render : elle s'endort après 15 minutes sans visite et met environ une minute à se réveiller. Le site l'annonce (« Le serveur démarre… ») et réessaie automatiquement.
+- Cache en mémoire : il repart à vide à chaque réveil ou redémarrage du backend.
 - Pas encore de sauvegarde dans le navigateur ni de générateur de combinaisons sans conflit (prévu en V1.1).
 - Import vérifié automatiquement par relecture du fichier ; la liste de vérification manuelle des 3 agendas est dans [docs/import-checklist.md](docs/import-checklist.md).
 
@@ -143,7 +144,7 @@ Outil non officiel, sans lien avec l'UQAM. Les données viennent des pages publi
 
 HoraireSync turns a list of UQAM courses into an `.ics` file for Apple Calendar, Google Calendar or Outlook. Pick the upcoming term and your courses; the app reads the published sections, ranks them against your preferences, detects conflicts and generates the term schedule. The interface is in French; texts are centralized for a future English version.
 
-**Demo:** [horairesync.vercel.app](https://horairesync.vercel.app) · **API:** [backend-production-68f55.up.railway.app/api/v1/schools](https://backend-production-68f55.up.railway.app/api/v1/schools)
+**Demo:** [horairesync.vercel.app](https://horairesync.vercel.app) · **API:** [horairesync-api.onrender.com/api/v1/schools](https://horairesync-api.onrender.com/api/v1/schools)
 
 ## Problem
 
@@ -191,7 +192,7 @@ Tests: `./mvnw verify` (backend, JaCoCo coverage gate at 70 % on services and ad
 
 ## Deployment
 
-Backend on Railway from `backend/Dockerfile` (root directory `/backend`, healthcheck `/api/v1/schools`, `CORS_ALLOWED_ORIGINS` = Vercel URL, `PORT=8080`). Frontend on Vercel with root directory `frontend` and `VITE_API_URL` = Railway URL. CI on GitHub Actions.
+Backend on Render's free plan from `backend/Dockerfile` (`CORS_ALLOWED_ORIGINS` = Vercel URL, `PORT` provided by Render). Frontend on Vercel with root directory `frontend` and `VITE_API_URL` = Render URL. CI on GitHub Actions.
 
 ## Adding a school
 
@@ -208,6 +209,7 @@ Backend on Railway from `backend/Dockerfile` (root directory `/backend`, healthc
 - Published term end dates can be ambiguous; per-meeting dates are used instead.
 - The reading week depends on the faculty: excluded by default, the user can keep it.
 - A change in UQAM's markup yields `PARSING_FAILED` until the adapter is updated.
+- The API runs on Render's free plan: it sleeps after 15 minutes without visits and takes about a minute to wake up; the site shows a "server is starting" banner and retries.
 - UQAM's robots.txt asks for 10 s between requests: 4 new courses load in about 40 s in the background; cached for 24 h in memory (lost on restart).
 - No browser persistence or automatic conflict-free combinations yet (planned for v1.1).
 
