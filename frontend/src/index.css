@@ -1,23 +1,41 @@
-/* Design tokens and base styles. Colors meet WCAG AA contrast on their backgrounds. */
+/* Design tokens and base styles. Colors meet WCAG AA contrast on their backgrounds.
+   Palette: UQAM blue (#0079be) as the only accent, navy for text accents, neutral grays. */
 :root {
-  --bg: #f6f7f9;
+  --bg: #f5f7fa;
   --surface: #ffffff;
-  --text: #1b1f24;
-  --muted: #4d5560;
-  --border: #d3d8de;
-  --primary: #174ea6;
+  --surface-soft: #f1f4f7;
+  --text: #1b2430;
+  --muted: #5f6b7a;
+  --border: #e1e6ec;
+  --border-strong: #c9d2dc;
+  --primary: #0079be;
+  --primary-strong: #006fae;
   --primary-text: #ffffff;
-  --primary-soft: #e6eefb;
-  --danger: #a51d24;
-  --danger-soft: #fdecec;
+  --primary-soft: #e8f2fa;
+  --navy: #00365f;
+  --danger: #b3261e;
+  --danger-soft: #fcebea;
   --warning: #7a4d00;
-  --warning-soft: #fff4dc;
   --success: #1e6b34;
-  --success-soft: #e5f4ea;
-  --focus: #f0a500;
-  --radius: 8px;
+  --focus: #00365f;
+  --radius: 6px;
+  --radius-lg: 8px;
   --space: 16px;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* one color per course in the week view: background and text */
+  --course-1-bg: #0079be;
+  --course-1-text: #ffffff;
+  --course-2-bg: #00365f;
+  --course-2-text: #ffffff;
+  --course-3-bg: #9cc8e8;
+  --course-3-text: #0b2540;
+  --course-4-bg: #2f6690;
+  --course-4-text: #ffffff;
+  --course-5-bg: #d3e3f0;
+  --course-5-text: #0b2540;
+  --course-6-bg: #5a7184;
+  --course-6-text: #ffffff;
+  font-family: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -25,20 +43,35 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14171b;
-    --surface: #1d2126;
-    --text: #e8eaed;
-    --muted: #b0b7c0;
-    --border: #39404a;
-    --primary: #8ab4f8;
-    --primary-text: #0b1d3a;
-    --primary-soft: #1f2d45;
-    --danger: #f28b82;
-    --danger-soft: #3b1f1f;
-    --warning: #fdd663;
-    --warning-soft: #3a3117;
-    --success: #81c995;
-    --success-soft: #1c3324;
+    --bg: #11161c;
+    --surface: #182029;
+    --surface-soft: #1f2933;
+    --text: #e6ebf0;
+    --muted: #a3afbc;
+    --border: #2b3642;
+    --border-strong: #3c4957;
+    --primary: #5aa9df;
+    --primary-strong: #7dbbe6;
+    --primary-text: #08223a;
+    --primary-soft: #1a3247;
+    --navy: #a9d1ee;
+    --danger: #f2948c;
+    --danger-soft: #3a2020;
+    --warning: #f3cf72;
+    --success: #86cf9b;
+    --focus: #a9d1ee;
+    --course-1-bg: #3d95cf;
+    --course-1-text: #06192a;
+    --course-2-bg: #a9d1ee;
+    --course-2-text: #06192a;
+    --course-3-bg: #2c5f86;
+    --course-3-text: #ffffff;
+    --course-4-bg: #6fb2e0;
+    --course-4-text: #06192a;
+    --course-5-bg: #39566f;
+    --course-5-text: #ffffff;
+    --course-6-bg: #8aa0b4;
+    --course-6-text: #06192a;
   }
 }
 
@@ -54,16 +87,26 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
-h1, h2, h3 {
+h1, h2, h3, h4 {
   line-height: 1.25;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.05rem;
 }
 
 button, input, select {
   font: inherit;
+}
+
+input[type='radio'],
+input[type='checkbox'] {
+  accent-color: var(--primary);
 }
 
 .visually-hidden {
