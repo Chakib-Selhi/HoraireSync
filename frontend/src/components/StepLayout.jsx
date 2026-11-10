@@ -26,14 +26,14 @@ export default function StepLayout({ title, hint, children, onBack, onNext, next
           </button>
         )}
         {onNext && (
-          <button type="button" className={ui.button} onClick={onNext} disabled={nextDisabled}
+          <button type="button" className={`${ui.button} ${styles.next}`} onClick={onNext} disabled={nextDisabled}
             aria-describedby={nextDisabled && nextHint ? 'next-hint' : undefined}>
             {nextLabel ?? t('nav.next')}
           </button>
         )}
       </div>
       {nextDisabled && nextHint && (
-        <p id="next-hint" className={ui.hint}>
+        <p id="next-hint" className={`${ui.hint} ${styles.nextHint}`}>
           {nextHint}
         </p>
       )}

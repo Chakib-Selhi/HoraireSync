@@ -5,24 +5,33 @@
 
 .title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
 }
 
 .title:focus {
   outline: none;
 }
 
+.step > p {
+  margin-top: 6px;
+}
+
 .content {
-  margin-top: var(--space);
+  margin-top: 22px;
 }
 
 .nav {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin-top: calc(var(--space) * 1.5);
+  margin-top: 28px;
 }
 
-.nav > :only-child {
+.next {
   margin-left: auto;
+}
+
+.nextHint {
+  text-align: right;
 }

@@ -25,31 +25,34 @@ const SCREENS = {
   export: ExportStep,
 };
 
+/** Steps whose content needs the full width (list and week view side by side). */
+const WIDE = new Set(['sections', 'review']);
+
 export default function App() {
   const { state, dispatch } = useSchedule();
   useCourseLoader(state, dispatch);
   useEffect(() => {
     warmUp();
   }, []);
-  const Screen = SCREENS[STEPS[state.step]];
+  const name = STEPS[state.step];
+  const Screen = SCREENS[name];
   return (
     <>
       <a href="#main" className={styles.skip}>
         {t('app.skipToContent')}
       </a>
       <header className={styles.header}>
-        <div className={styles.inner}>
+        <div className={styles.headerInner}>
           <h1 className={styles.brand}>{t('app.title')}</h1>
-          <p className={styles.tagline}>{t('app.tagline')}</p>
+          <Stepper state={state} onGoTo={(step) => dispatch({ type: 'goTo', step })} />
         </div>
       </header>
       <WakeBanner />
-      <main id="main" className={styles.inner}>
-        <Stepper state={state} onGoTo={(step) => dispatch({ type: 'goTo', step })} />
+      <main id="main" className={WIDE.has(name) ? styles.wide : styles.narrow}>
         {/* key: each step is a fresh screen, so its heading receives focus */}
         <Screen key={state.step} />
       </main>
-      <footer className={`${styles.inner} ${styles.footer}`}>
+      <footer className={`${WIDE.has(name) ? styles.wide : styles.narrow} ${styles.footer}`}>
         <p>{t('app.disclaimer')}</p>
       </footer>
     </>

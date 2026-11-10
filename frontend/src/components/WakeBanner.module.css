@@ -1,19 +1,18 @@
 .live {
-  max-width: 960px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 24px;
 }
 
 .banner {
   display: flex;
   gap: 10px;
   align-items: center;
-  margin: 0 0 var(--space);
+  margin: 16px 0 0;
   padding: 10px 14px;
-  border-radius: var(--radius);
   background: var(--primary-soft);
   color: var(--text);
-  border-left: 4px solid var(--primary);
+  border-left: 3px solid var(--primary);
 }
 
 .spinner {
