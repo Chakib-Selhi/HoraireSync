@@ -128,20 +128,48 @@ describe('SectionsStep', () => {
     ]);
     const { state } = renderWithState(<SectionsStep />, { term, courses: [course([day, evening])] });
 
-    await screen.findByText(/Compatibilité : 100 %/);
+    await screen.findByText(/compatibilité de 100 %/);
     const cards = screen.getAllByRole('article');
     expect(within(cards[0]).getByText('Groupe 40')).toBeInTheDocument();
     expect(within(cards[1]).getByText(/En conflit avec MAT1060 gr. 20/)).toBeInTheDocument();
-    expect(within(cards[1]).getByText('Ne respecte pas une préférence · Compatibilité : 0 %')).toBeInTheDocument();
+    expect(within(cards[1]).getByText('Ne respecte pas une préférence (compatibilité de 0 %)')).toBeInTheDocument();
     expect(screen.queryByText('Information non disponible')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Ajouter un cours' })).toBeNull();
     expect(within(cards[1]).getByText('Détails')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled();
 
-    await user.click(within(cards[0]).getByRole('button', { name: 'Choisir ce groupe' }));
+    expect(screen.getByText('Aucun groupe choisi pour le moment')).toBeInTheDocument();
+
+    await user.click(within(cards[0]).getByRole('radio', { name: 'Choisir le groupe 40' }));
 
     expect(state().selections.INF1120.section.sectionNumber).toBe('040');
+    expect(screen.getByRole('radio', { name: 'Choisir le groupe 40' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Continuer' })).toBeEnabled();
+    const week = screen.getByRole('complementary');
+    expect(within(week).getByText('3 heures')).toBeInTheDocument();
+    expect(within(week).getByText('Aucun conflit dans la semaine')).toBeInTheDocument();
+    expect(within(week).getByText('Mardi, mercredi, jeudi et vendredi libres')).toBeInTheDocument();
+  });
+
+  it('previews the pointed group in the week without choosing it', async () => {
+    const user = userEvent.setup();
+    const evening = section({ sectionNumber: '040', meetings: [meeting({ day: 'WEDNESDAY', start: '18:00', end: '21:00' })] });
+    api.rank.mockResolvedValue([
+      { courseCode: 'INF1120', sectionNumber: '040', score: 100, compatible: true, criteria: [], conflicts: [] },
+    ]);
+    const { state } = renderWithState(<SectionsStep />, { term, courses: [course([evening])] });
+
+    const option = await screen.findByRole('article', { name: 'Groupe 40' });
+    const wednesday = within(screen.getByRole('complementary')).getByRole('list', { name: 'Mercredi' });
+    expect(within(wednesday).queryByText('INF1120')).toBeNull();
+
+    await user.hover(option);
+    expect(within(wednesday).getByText('INF1120')).toBeInTheDocument();
+    expect(within(wednesday).getByText('Aperçu du groupe pointé')).toBeInTheDocument();
+    expect(state().selections.INF1120).toBeUndefined();
+
+    await user.unhover(option);
+    expect(within(wednesday).queryByText('INF1120')).toBeNull();
   });
 
   it('shows no percentage when no preference is set', async () => {
@@ -165,7 +193,7 @@ describe('SectionsStep', () => {
 
     expect(screen.getByText(/Aucun groupe publié/)).toBeInTheDocument();
     expect(screen.getByText('Horaire non publié')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Choisir ce groupe' })).toBeNull();
+    expect(screen.getByRole('radio', { name: 'Choisir le groupe 63' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Retirer ce cours' }));
     expect(state().courses.map((c) => c.code)).toEqual(['INF1120']);
   });
@@ -198,7 +226,7 @@ describe('ReviewStep', () => {
       selections: { INF1120: { courseTitle: 'Programmation I', section: complete } },
     });
 
-    expect(await screen.findByText('INF1120 gr. 20 et MAT1060 gr. 10 : Lundi de 11 h 00 à 12 h 30')).toBeInTheDocument();
+    expect(await screen.findByText('INF1120 gr. 20 et MAT1060 gr. 10 : Lundi de 11 h à 12 h 30')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confirmer cet horaire' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Liste' }));
     expect(screen.getByRole('table')).toHaveTextContent('Ada');

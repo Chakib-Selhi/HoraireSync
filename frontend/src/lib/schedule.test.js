@@ -9,7 +9,9 @@ import {
   termBounds,
   visibleDays,
   weekLayout,
+  weekSummary,
 } from './schedule.js';
+import { formatHours, joinDays } from './format.js';
 
 const meeting = (over = {}) => ({
   day: 'MONDAY', start: '09:30:00', end: '12:30:00', room: null, campus: 'Campus de Montréal', type: 'LECTURE',
@@ -135,5 +137,36 @@ describe('helpers', () => {
   it('lists the campuses of the loaded courses', () => {
     const courses = [{ sections: [section(), section({ meetings: [meeting({ campus: 'UQAM Campus de Laval' })] })] }, { sections: null }];
     expect(campusesOf(courses)).toEqual(['Campus de Montréal', 'UQAM Campus de Laval']);
+  });
+});
+
+describe('weekSummary', () => {
+  const block = (day, start, end, over = {}) => ({ day, start: start * 60, end: end * 60, ...over });
+
+  it('counts weekly hours, overlaps and free weekdays, ignoring previewed blocks', () => {
+    const summary = weekSummary([
+      block('MONDAY', 18, 21),
+      block('TUESDAY', 18, 20),
+      block('TUESDAY', 19, 21),
+      block('WEDNESDAY', 9, 12, { ghost: true }),
+    ]);
+    expect(summary).toEqual({ minutes: 420, conflicts: 1, freeDays: ['WEDNESDAY', 'THURSDAY', 'FRIDAY'] });
+  });
+
+  it('reports no free day when nothing is chosen', () => {
+    expect(weekSummary([])).toEqual({ minutes: 0, conflicts: 0, freeDays: [] });
+  });
+});
+
+describe('hours and days wording', () => {
+  it('writes hours the Quebec way', () => {
+    expect(formatHours(300)).toBe('5 heures');
+    expect(formatHours(270)).toBe('4,5 heures');
+    expect(formatHours(60)).toBe('1 heure');
+  });
+
+  it('joins days with commas and "et"', () => {
+    expect(joinDays(['FRIDAY'])).toBe('Vendredi');
+    expect(joinDays(['MONDAY', 'WEDNESDAY', 'FRIDAY'])).toBe('Lundi, mercredi et vendredi');
   });
 });

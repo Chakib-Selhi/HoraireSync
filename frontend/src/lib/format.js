@@ -2,11 +2,11 @@ import { t } from '../i18n/index.js';
 
 export const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
-/** "09:30:00" or "09:30" → "9 h 30" (Quebec style). */
+/** "09:30:00" → "9 h 30", "18:00" → "18 h" (Quebec style). */
 export function formatTime(value) {
   if (!value) return '';
   const [h, m] = value.split(':');
-  return `${Number(h)} h ${m}`;
+  return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`;
 }
 
 /** "09:30:00" → minutes since midnight. */
@@ -23,6 +23,25 @@ export function formatDate(iso) {
   return new Intl.DateTimeFormat('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' }).format(
     new Date(y, m - 1, d),
   );
+}
+
+/** "2027-01-11" → "11 janvier", for ranges inside one term. */
+export function formatDayMonth(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Intl.DateTimeFormat('fr-CA', { day: 'numeric', month: 'long' }).format(new Date(y, m - 1, d));
+}
+
+/** 300 → "5 heures", 270 → "4,5 heures", 60 → "1 heure". */
+export function formatHours(minutes) {
+  const n = Math.round((minutes / 60) * 10) / 10;
+  return n === 1 ? t('week.hour', { n: 1 }) : t('week.hoursN', { n: String(n).replace('.', ',') });
+}
+
+/** ["Lundi", "Mercredi", "Vendredi"] → "Lundi, mercredi et vendredi". */
+export function joinDays(days) {
+  const names = days.map((d, i) => (i === 0 ? t(`days.${d}`) : t(`days.${d}`).toLowerCase()));
+  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} ${t('week.and')} ${names.at(-1)}`;
 }
 
 export const dayLabel = (day) => (day ? t(`days.${day}`) : t('common.notAvailable'));

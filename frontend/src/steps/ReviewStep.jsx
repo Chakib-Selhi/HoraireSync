@@ -3,6 +3,7 @@ import { api } from '../api/client.js';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import { ValueOrMissing } from '../components/MissingBadge.jsx';
 import StepLayout from '../components/StepLayout.jsx';
+import WeekSummary from '../components/WeekSummary.jsx';
 import WeekView from '../components/WeekView.jsx';
 import ui from '../components/ui.module.css';
 import { t } from '../i18n/index.js';
@@ -11,6 +12,7 @@ import { essentialProblems, oneOffMeetings, termBounds, weekLayout } from '../li
 import { useAsync } from '../lib/useAsync.js';
 import { orderedSelections } from '../state/reducer.js';
 import { useSchedule } from '../state/ScheduleContext.jsx';
+import styles from './ReviewStep.module.css';
 
 const label = (ref) => sectionLabel(ref.courseCode, ref.sectionNumber);
 
@@ -37,16 +39,21 @@ export default function ReviewStep() {
       nextHint={t('review.blocking')}
     >
       <div className={ui.stack}>
-        <div className={ui.row} role="group" aria-label={t('review.title')}>
-          {['week', 'list'].map((v) => (
-            <button key={v} type="button" className={view === v ? ui.button : ui.secondary} aria-pressed={view === v}
-              onClick={() => setView(v)}>
-              {t(`review.${v}`)}
-            </button>
-          ))}
+        <div className={ui.card}>
+          <div className={ui.tabs} role="group" aria-label={t('review.title')}>
+            {['week', 'list'].map((v) => (
+              <button key={v} type="button" className={ui.tab} aria-pressed={view === v} onClick={() => setView(v)}>
+                {t(`review.${v}`)}
+              </button>
+            ))}
+          </div>
+          <div className={styles.view}>
+            {view === 'week'
+              ? <WeekView blocks={blocks} courseOrder={state.courses.map((c) => c.code)} height={560} />
+              : <ListView selections={selections} />}
+          </div>
+          {view === 'week' && <WeekSummary blocks={blocks} conflictCount={conflicts.data?.length} />}
         </div>
-
-        {view === 'week' ? <WeekView blocks={blocks} /> : <ListView selections={selections} />}
 
         {exams.length > 0 && (
           <div>
@@ -54,7 +61,7 @@ export default function ReviewStep() {
             <ul>
               {exams.map(({ courseCode, sectionNumber, meeting }, i) => (
                 <li key={i}>
-                  {formatDate(meeting.onlyDate)} · {formatTime(meeting.start)} - {formatTime(meeting.end)} · {sectionLabel(courseCode, sectionNumber)}
+                  {sectionLabel(courseCode, sectionNumber)}, {formatDate(meeting.onlyDate)}, {t('week.range', { start: formatTime(meeting.start), end: formatTime(meeting.end) })}
                 </li>
               ))}
             </ul>
@@ -119,11 +126,11 @@ function ListView({ selections }) {
               .map((m, i) => (
                 <tr key={`${section.courseCode}-${i}`}>
                   <td>
-                    <strong>{section.courseCode}</strong> {courseTitle} · {t(`meetingTypes.${m.type ?? 'OTHER'}`)}
+                    <strong>{section.courseCode}</strong> {courseTitle} ({t(`meetingTypes.${m.type ?? 'OTHER'}`).toLowerCase()})
                   </td>
                   <td>{groupNumber(section.sectionNumber)}</td>
                   <td><ValueOrMissing value={m.day ? dayLabel(m.day) : null} /></td>
-                  <td><ValueOrMissing value={m.start && m.end ? `${formatTime(m.start)} - ${formatTime(m.end)}` : null} /></td>
+                  <td><ValueOrMissing value={m.start && m.end ? t('week.range', { start: formatTime(m.start), end: formatTime(m.end) }) : null} /></td>
                   <td>
                     {section.mode === 'ONLINE' ? t('modes.ONLINE') : <ValueOrMissing value={[m.room, m.campus].filter(Boolean).join(', ') || null} />}
                   </td>

@@ -4,3 +4,7 @@
   overflow-y: auto;
   padding-right: 4px;
 }
+
+.item {
+  align-items: center;
+}

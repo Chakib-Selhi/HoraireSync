@@ -105,7 +105,7 @@ function AddedCourses() {
       ) : (
         <ul className={ui.list} aria-live="polite">
           {state.courses.map((c) => (
-            <li key={c.code} className={`${ui.card} ${ui.row}`}>
+            <li key={c.code} className={`${ui.card} ${ui.row} ${styles.item}`}>
               <span style={{ flex: 1 }}>
                 <strong>{c.code}</strong> {c.title}
                 <br />
@@ -114,7 +114,7 @@ function AddedCourses() {
                 ) : (
                   <span className={ui.hint}>
                     {status(c)}
-                    {c.credits ? ` · ${t('courses.credits', { count: c.credits })}` : ''}
+                    {c.credits ? `, ${t('courses.credits', { count: c.credits }).toLowerCase()}` : ''}
                   </span>
                 )}
               </span>
@@ -154,7 +154,7 @@ function ProgramCourses({ onAdd }) {
             {visible.map((c) => {
               const added = state.courses.some((x) => x.code === c.code);
               return (
-                <li key={c.code} className={ui.row}>
+                <li key={c.code} className={`${ui.row} ${styles.item}`}>
                   <span style={{ flex: 1 }}>
                     <strong>{c.code}</strong> {c.title}
                   </span>

@@ -1,39 +1,64 @@
 .scroller {
   overflow-x: auto;
+  container-type: inline-size;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: 56px repeat(var(--days), minmax(110px, 1fr));
-  grid-template-rows: auto 720px;
-  min-width: calc(56px + var(--days) * 110px);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  grid-template-columns: 44px repeat(var(--days), minmax(96px, 1fr));
+  grid-template-rows: auto var(--height);
+  padding-bottom: 10px;
+  min-width: calc(44px + var(--days) * 96px);
 }
 
 .corner,
 .dayHeader {
-  padding: 8px;
+  padding: 0 6px 8px;
   border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
   font-weight: 600;
-  text-align: center;
+  color: var(--muted);
 }
 
-.dayHeader abbr {
+.short {
+  display: none;
   text-decoration: none;
+}
+
+@container (max-width: 640px) {
+  .full {
+    display: none;
+  }
+
+  .short {
+    display: inline;
+  }
+
+  .grid {
+    grid-template-columns: 36px repeat(var(--days), minmax(54px, 1fr));
+    min-width: calc(36px + var(--days) * 54px);
+  }
+
+  /* on a phone a block keeps only the course code and its times */
+  .detail {
+    display: none;
+  }
+
+  .block {
+    padding: 4px 5px;
+    font-size: 0.7rem;
+  }
 }
 
 .hours {
   position: relative;
-  border-right: 1px solid var(--border);
   font-size: 0.75rem;
   color: var(--muted);
 }
 
 .hours span {
   position: absolute;
-  right: 6px;
+  right: 8px;
   transform: translateY(-50%);
 }
 
@@ -46,18 +71,20 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
 }
 
-.column:last-child {
-  border-right: none;
-}
-
-.line {
+.line,
+.lineMinor {
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 1px dashed var(--border);
+  border-top: 1px solid var(--border);
+}
+
+.lineMinor {
+  border-top-style: dotted;
+  opacity: 0.7;
 }
 
 .block {
@@ -65,22 +92,35 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 4px 6px;
+  padding: 5px 7px;
   font-size: 0.75rem;
-  line-height: 1.25;
-  background: var(--primary-soft);
-  border-left: 4px solid var(--primary);
-  border-radius: 4px;
-  color: var(--text);
+  line-height: 1.3;
+  border-radius: 3px;
 }
 
-.blockConflict {
-  composes: block;
-  background: var(--danger-soft);
-  border-left-color: var(--danger);
+.block strong {
+  font-size: 0.8rem;
+}
+
+.c1 { background: var(--course-1-bg); color: var(--course-1-text); }
+.c2 { background: var(--course-2-bg); color: var(--course-2-text); }
+.c3 { background: var(--course-3-bg); color: var(--course-3-text); }
+.c4 { background: var(--course-4-bg); color: var(--course-4-text); }
+.c5 { background: var(--course-5-bg); color: var(--course-5-text); }
+.c6 { background: var(--course-6-bg); color: var(--course-6-text); }
+
+.ghost {
+  background: repeating-linear-gradient(135deg, var(--primary-soft) 0 6px, var(--surface) 6px 12px);
+  color: var(--navy);
+  outline: 1.5px dashed var(--navy);
+  outline-offset: -1.5px;
+}
+
+.conflict {
+  box-shadow: inset 0 0 0 2px var(--danger);
 }
 
 .conflictLabel {
+  margin-top: auto;
   font-weight: 700;
-  color: var(--danger);
 }

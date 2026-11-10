@@ -193,3 +193,22 @@ export function exportPayload({ school, term, courses = [], selections, excludeR
     selections,
   };
 }
+
+/**
+ * Figures shown under the week view, from the chosen blocks only (previewed blocks are ignored):
+ * weekly minutes of class, number of overlapping pairs, and weekdays (Monday to Friday) without any class.
+ */
+export function weekSummary(blocks) {
+  const chosen = blocks.filter((b) => !b.ghost);
+  const minutes = chosen.reduce((sum, b) => sum + (b.end - b.start), 0);
+  let conflicts = 0;
+  for (let i = 0; i < chosen.length; i++) {
+    for (let j = i + 1; j < chosen.length; j++) {
+      const a = chosen[i];
+      const b = chosen[j];
+      if (a.day === b.day && a.start < b.end && b.start < a.end) conflicts++;
+    }
+  }
+  const freeDays = chosen.length === 0 ? [] : DAYS.slice(0, 5).filter((d) => !chosen.some((b) => b.day === d));
+  return { minutes, conflicts, freeDays };
+}

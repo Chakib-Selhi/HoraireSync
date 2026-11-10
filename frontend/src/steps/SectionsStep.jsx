@@ -1,16 +1,39 @@
+import { useState } from 'react';
 import { api } from '../api/client.js';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import SectionCard from '../components/SectionCard.jsx';
 import StepLayout from '../components/StepLayout.jsx';
+import WeekSummary from '../components/WeekSummary.jsx';
+import WeekView from '../components/WeekView.jsx';
 import ui from '../components/ui.module.css';
 import { t } from '../i18n/index.js';
+import { formatDayMonth } from '../lib/format.js';
+import { termBounds, weekLayout } from '../lib/schedule.js';
 import { useAsync } from '../lib/useAsync.js';
 import { orderedSelections } from '../state/reducer.js';
 import { useSchedule } from '../state/ScheduleContext.jsx';
+import styles from './SectionsStep.module.css';
 
+/**
+ * Courses and their groups on the left, the week being built on the right. Pointing at a group draws it with a
+ * dashed border in the week, in place of the group chosen for that course, before the user commits to it.
+ */
 export default function SectionsStep() {
   const { state, dispatch } = useSchedule();
+  const [preview, setPreview] = useState(null);
   const allChosen = state.courses.every((c) => state.selections[c.code]);
+
+  const chosen = orderedSelections(state);
+  const previewing = preview && state.selections[preview.courseCode]?.section !== preview ? preview : null;
+  const shown = previewing
+    ? [...chosen.filter((s) => s.section.courseCode !== previewing.courseCode), { section: previewing }]
+    : chosen;
+  const blocks = weekLayout(shown).map((b) =>
+    previewing && b.courseCode === previewing.courseCode ? { ...b, ghost: true } : b,
+  );
+  const courseOrder = state.courses.map((c) => c.code);
+  const bounds = termBounds(state.term, state.courses);
+
   return (
     <StepLayout
       title={t('sections.title')}
@@ -20,16 +43,28 @@ export default function SectionsStep() {
       nextDisabled={!allChosen}
       nextHint={t('sections.mustChooseAll')}
     >
-      <div className={ui.stack}>
-        {state.courses.map((course) => (
-          <CourseSections key={course.code} course={course} />
-        ))}
+      <div className={styles.layout}>
+        <div className={styles.courses}>
+          {state.courses.map((course, i) => (
+            <CourseSections key={course.code} course={course} colorIndex={i} onPreview={setPreview} />
+          ))}
+        </div>
+        <aside className={styles.week} aria-labelledby="week-title">
+          <h3 id="week-title" className={styles.weekTitle}>{state.term?.label ?? t('sections.week')}</h3>
+          <p className={styles.weekRange}>
+            {bounds.start && bounds.end
+              ? t('sections.weekRange', { start: formatDayMonth(bounds.start), end: formatDayMonth(bounds.end) })
+              : t('sections.week')}
+          </p>
+          <WeekView blocks={blocks} courseOrder={courseOrder} height={520} />
+          <WeekSummary blocks={blocks} />
+        </aside>
       </div>
     </StepLayout>
   );
 }
 
-function CourseSections({ course }) {
+function CourseSections({ course, colorIndex, onPreview }) {
   const { state, dispatch } = useSchedule();
   const chosen = state.selections[course.code];
   const others = orderedSelections(state).filter((s) => s.section.courseCode !== course.code);
@@ -47,35 +82,38 @@ function CourseSections({ course }) {
   const remove = () => dispatch({ type: 'removeCourse', code: course.code });
 
   return (
-    <section className={ui.stack} aria-labelledby={`course-${course.code}`}>
-      <h3 id={`course-${course.code}`}>
-        {course.code} {course.title}
-      </h3>
-      {course.status === 'loading' && <p>{t('courses.loading')}</p>}
-      {course.status === 'error' && <ErrorMessage error={course.error} />}
-      {course.status === 'ready' && sections.length === 0 && (
-        <div className={ui.row}>
-          <p className={ui.badge}>{t('sections.noSections')}</p>
-          <button type="button" className={ui.link} onClick={remove}>
-            {t('sections.removeCourse')}
+    <section className={styles.course} aria-labelledby={`course-${course.code}`}>
+      <header className={styles.courseHeader}>
+        <h3 id={`course-${course.code}`} className={styles.courseTitle}>
+          <i className={styles.swatch} style={{ background: `var(--course-${(colorIndex % 6) + 1}-bg)` }} aria-hidden="true" />
+          {course.code} <span>{course.title}</span>
+        </h3>
+        {chosen && !course.manual && (
+          <button type="button" className={ui.link} onClick={() => dispatch({ type: 'unchooseSection', code: course.code })}>
+            {t('sections.unselect')}
           </button>
-        </div>
-      )}
+        )}
+      </header>
+      {course.status === 'loading' && <p className={ui.hint}>{t('courses.loading')}</p>}
+      {course.status === 'error' && <ErrorMessage error={course.error} />}
+      {course.status === 'ready' && sections.length === 0 && <p className={ui.badge}>{t('sections.noSections')}</p>}
       {course.manual ? (
         <SectionCard section={chosen.section} chosen manual />
       ) : (
-        ordered.map((section) => (
-          <SectionCard
-            key={section.sectionNumber}
-            section={section}
-            score={scoreOf(section)}
-            chosen={chosen?.section.sectionNumber === section.sectionNumber}
-            onChoose={() => dispatch({ type: 'chooseSection', section })}
-            onUnchoose={() => dispatch({ type: 'unchooseSection', code: course.code })}
-          />
-        ))
+        <div role="radiogroup" aria-labelledby={`course-${course.code}`}>
+          {ordered.map((section) => (
+            <SectionCard
+              key={section.sectionNumber}
+              section={section}
+              score={scoreOf(section)}
+              chosen={chosen?.section.sectionNumber === section.sectionNumber}
+              onChoose={() => dispatch({ type: 'chooseSection', section })}
+              onPreview={onPreview}
+            />
+          ))}
+        </div>
       )}
-      {course.status === 'error' && (
+      {(course.status === 'error' || (course.status === 'ready' && sections.length === 0)) && (
         <button type="button" className={ui.link} onClick={remove}>
           {t('sections.removeCourse')}
         </button>

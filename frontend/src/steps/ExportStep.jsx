@@ -64,7 +64,7 @@ export default function ExportStep() {
           <ErrorMessage error={status.error} />
         </div>
 
-        <h3>{t('export.howTo')}</h3>
+        <h3 style={{ marginTop: 32, marginBottom: 0 }}>{t('export.howTo')}</h3>
         <p className={ui.hint}>{t('export.tip')}</p>
         <Instructions title={t('export.apple')} steps={t('export.appleSteps')} extra={t('export.appleIos')} />
         <Instructions title={t('export.google')} steps={t('export.googleSteps')} />

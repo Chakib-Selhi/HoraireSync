@@ -50,12 +50,12 @@ export default function ProgramStep() {
         {results.data && results.data.length > 0 && (
           <ul className={ui.list} aria-live="polite">
             {results.data.map((p) => (
-              <li key={p.code} className={`${ui.card} ${ui.row}`}>
+              <li key={p.code} className={`${ui.card} ${ui.row}`} style={{ alignItems: 'center' }}>
                 <span style={{ flex: 1 }}>
                   <strong>{p.name}</strong>
                   <br />
                   <span className={ui.hint}>
-                    {[p.type, p.code].filter(Boolean).join(' · ')}
+                    {[p.type, p.code].filter(Boolean).join(', ')}
                   </span>
                 </span>
                 <button type="button" className={ui.secondary} aria-pressed={state.program?.code === p.code}
