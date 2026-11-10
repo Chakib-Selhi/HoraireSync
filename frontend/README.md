@@ -25,6 +25,13 @@ En production, `VITE_API_URL` donne l'adresse du backend (ex. `https://api.exemp
 | `src/components` | Composants réutilisables (champ adapté au type de valeur, carte de groupe, vue semaine…) |
 | `src/steps` | Un composant par étape |
 
+## Interface
+
+- Une seule couleur d'accent, le bleu de l'UQAM (`#0079be`), avec un bleu marine et des gris neutres. Chaque cours a sa propre nuance de bleu dans la vue semaine.
+- Police Public Sans, hébergée avec l'application (`@fontsource/public-sans`) : aucune requête vers un service tiers.
+- Les jetons de couleur sont dans `src/index.css`, avec une variante pour le mode sombre ; les contrastes respectent WCAG AA.
+- Étape Groupes : les cours et leurs groupes à gauche, la semaine en construction à droite. Pointer un groupe (souris ou clavier) l'affiche en pointillé dans la semaine, avant de le choisir.
+
 ## Choix
 
 - Pas de routeur ni de Redux : le parcours est linéaire et l'état tient dans un reducer testable sans React.
